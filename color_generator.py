@@ -19,7 +19,7 @@ class color_generator():
 
     def getNextColorSet(self):
         self.counter= (self.counter+1) % len(self.LIST_OF_COLORS)
-        print(self.LIST_OF_COLORS[self.counter].dark)
+        #print(self.LIST_OF_COLORS[self.counter].dark)
         rgb = '#%02x%02x%02x%02x' % self.LIST_OF_COLORS[self.counter].dark
-        print("rgb:" +str(rgb))
+        #print("rgb:" +str(rgb))
         return self.LIST_OF_COLORS[self.counter], rgb[:-2]
