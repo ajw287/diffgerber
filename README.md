@@ -19,4 +19,6 @@ This project depends on python3, pillow, tkinter & pygerber.  The following comm
    ```
 
 # Using diffgerber
-This is a basic tool to highlight differences in gerber files so that they can be compared 
+This is a basic tool to highlight differences in gerber files so that they can be compared.
+
+![Picture of the Gerber Difftool](docs/pics/GerberDifferenceViewer.png?raw=true "diffgerber")
