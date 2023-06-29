@@ -174,63 +174,66 @@ def layer_selected(image, full_filename, index):
 def hide_image(image, full_filename):
     print("remove the image from the photos")
 
-def directory_selected(frame, directory_entry):
-    global left_file_list, right_file_list, directories, frame_images, frame_checkboxes, frame_selected_layer_vars
+def directory_select_btn(frame, directory_entry):
     """Handle the event when a directory is selected."""
     selected_directory = filedialog.askdirectory()
     if selected_directory:
-        directory_entry.delete(0, tk.END)
-        directory_entry.insert(tk.END, selected_directory)
-        images, filenames, layer_colors = load_images(selected_directory)
-        frame_images.update({frame: images})
+        directory_selected(frame, directory_entry, selected_directory)
 
-        # Clear the checkboxes
-        for checkbox in frame_checkboxes[frame]:
-            checkbox.destroy()
-        frame_checkboxes[frame].clear()
+def directory_selected(frame, directory_entry, selected_directory):
+    global left_file_list, right_file_list, directories, frame_images, frame_checkboxes, frame_selected_layer_vars
+    directory_entry.delete(0, tk.END)
+    directory_entry.insert(tk.END, selected_directory)
+    images, filenames, layer_colors = load_images(selected_directory)
+    frame_images.update({frame: images})
 
-        # Create checkboxes
-        for i, image in enumerate(images):
-            frame_selected_layer_vars[frame].append(tk.StringVar())
-            checkbox = tk.Checkbutton(
-                frame,
-                #text=f"Image {i+1}",
-                text = filenames[i],
-                variable=frame_selected_layer_vars[frame][i],
-                onvalue=i,
-                #font = 12,
-                #width = 10,
-                #height = 1,
-                #image=checkbutton_image,
-                offvalue=-1,
-                selectcolor= layer_colors[i],
-                #command=lambda i=i: layer_selected(frame_images[frame][i], os.path.join(selected_directory, filenames[i]), i) if frame_selected_layer_vars[frame][i].get() == i else None
-                command=lambda i=i: layer_selected( frame_images[frame][i], os.path.join(selected_directory, filenames[i]), i)
-                #command=lambda checked, img=images[i], flnm=filenames[i]: show_image(checked, img, flnm)
-            )
-            checkbox.pack(anchor="w")
-            frame_checkboxes[frame].append(checkbox)
-            tellUser("Loaded file: " + filenames[i], label_msg=False, record_msg=True)
+    # Clear the checkboxes
+    for checkbox in frame_checkboxes[frame]:
+        checkbox.destroy()
+    frame_checkboxes[frame].clear()
 
-        #record the directory
-        if frame is left_frame:
-            directories[0] = selected_directory
-            left_file_list = filenames
-        elif frame is right_frame:
-            directories[1] = selected_directory
-            right_file_list = filenames
-        #print(str(left_file_list))
-        #print(str(right_file_list))
-        update_file_pairs()
-        #selected_images_var.set(-1)
-        # TODO: make this the check for differences and display them
-        if images:
-            show_image( images[0], os.path.join(selected_directory, filenames[0]))
+    # Create checkboxes
+    for i, image in enumerate(images):
+        frame_selected_layer_vars[frame].append(tk.StringVar())
+        checkbox = tk.Checkbutton(
+            frame,
+            #text=f"Image {i+1}",
+            text = filenames[i],
+            variable=frame_selected_layer_vars[frame][i],
+            onvalue=i,
+            #font = 12,
+            #width = 10,
+            #height = 1,
+            #image=checkbutton_image,
+            offvalue=-1,
+            selectcolor= layer_colors[i],
+            #command=lambda i=i: layer_selected(frame_images[frame][i], os.path.join(selected_directory, filenames[i]), i) if frame_selected_layer_vars[frame][i].get() == i else None
+            command=lambda i=i: layer_selected( frame_images[frame][i], os.path.join(selected_directory, filenames[i]), i)
+            #command=lambda checked, img=images[i], flnm=filenames[i]: show_image(checked, img, flnm)
+        )
+        checkbox.pack(anchor="w")
+        frame_checkboxes[frame].append(checkbox)
+        tellUser("Loaded file: " + filenames[i], label_msg=False, record_msg=True)
+
+    #record the directory
+    if frame is left_frame:
+        directories[0] = selected_directory
+        left_file_list = filenames
+    elif frame is right_frame:
+        directories[1] = selected_directory
+        right_file_list = filenames
+    #print(str(left_file_list))
+    #print(str(right_file_list))
+    update_file_pairs()
+    #selected_images_var.set(-1)
+    # TODO: make this the check for differences and display them
+    if images:
+        show_image( images[0], os.path.join(selected_directory, filenames[0]))
 
 #def toolbar_button_clicked():
 #    """Handle the event when the toolbar button is clicked."""
 #    print("Toolbar button clicked!")
-def button1_clear_clicked():
+def button1_clear_clicked(clear_dirs=True):
     global imageDict, photos, left_directory , right_directory, left_file_list , right_file_list, left_to_right_dict
     #print("Button 1 clicked")
     # Clear the checkboxes
@@ -244,9 +247,18 @@ def button1_clear_clicked():
     directories = ["", ""]
     right_file_list = []
     left_to_right_dict = {}
+    if clear_dirs:
+        left_directory_entry.delete(0,tk.END)
+        right_directory_entry.delete(0,tk.END)
 
 def button2_reload_clicked():
-    print("Reload Button clicked -  reload dirs \n\n *** NOT IMPLEMENTED ***\n\n")
+    #print("Reload Button clicked -  reload dirs")
+    global left_frame, right_frame, left_directory_entry, right_directory_entry
+    button1_clear_clicked(clear_dirs=False)
+    if len(left_directory_entry.get()) >1:
+        directory_selected(left_frame, left_directory_entry, left_directory_entry.get())
+    if len(right_directory_entry.get()) >1:
+        directory_selected(right_frame, right_directory_entry, right_directory_entry.get())
 
 def button3_export_clicked():
 
@@ -362,7 +374,7 @@ left_directory_label = tk.Label(left_frame, text="Gerber directory 1:")
 left_directory_label.pack(anchor=tk.NW)
 left_directory_entry = tk.Entry(left_frame)
 left_directory_entry.pack(anchor=tk.NW)
-left_directory_button = tk.Button(left_frame, text="Browse", command=lambda: directory_selected(left_frame, left_directory_entry))
+left_directory_button = tk.Button(left_frame, text="Browse", command=lambda: directory_select_btn(left_frame, left_directory_entry))
 left_directory_button.pack(anchor=tk.NW)
 
 # Right column: Directory selector
@@ -370,7 +382,7 @@ right_directory_label = tk.Label(right_frame, text="Gerber directory 2:")
 right_directory_label.pack(anchor=tk.NW)
 right_directory_entry = tk.Entry(right_frame)
 right_directory_entry.pack(anchor=tk.NW)
-right_directory_button = tk.Button(right_frame, text="Browse", command=lambda: directory_selected(right_frame, right_directory_entry))
+right_directory_button = tk.Button(right_frame, text="Browse", command=lambda: directory_select_btn(right_frame, right_directory_entry))
 right_directory_button.pack(anchor=tk.NW)
 
 # Middle column: Canvas to display the images with scrollbars
