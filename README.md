@@ -2,7 +2,7 @@
 Graphical tool to help users compare gerber files, the output from PCB CAD software
 
 # Setup
-This project depends on python3, pillow, tkinter & pygerber.  The following commands are recommended:
+This project depends on python3, pillow, tkinter, difflib & pygerber.  The following commands are recommended:
 
 1. Setup a python venv
    ```bash
@@ -11,7 +11,7 @@ This project depends on python3, pillow, tkinter & pygerber.  The following comm
    ```
 2. Install dependencies
    ```bash
-   pip install tk pillow pygerber
+   pip install tk pillow pygerber difflib
    ```
 4. Run the program:
    ```bash
@@ -20,6 +20,8 @@ This project depends on python3, pillow, tkinter & pygerber.  The following comm
 
 # Using diffgerber
 This is a basic tool to highlight differences in gerber files so that they can be compared.  At this time two directories of gerber files can be opened, layers are matched based on filename and checked for similarity.  If they are identical no differences will be expected, if there is more than 25% similarity, then a graphical "diff" is attempted.
+
+N.B. at this time (Jul-23) pygerber library only seems to work with a subset of gerber files.
 
 ![Picture of the Gerber Difftool](docs/pics/GerberDifferenceViewer.png?raw=true "diffgerber")
 
