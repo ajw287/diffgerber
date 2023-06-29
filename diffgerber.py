@@ -39,6 +39,7 @@ def new_color(size, color):
     return img
 
 def black_or_b(a, b, opacity=0.85):
+    tellUser("checking for differences... hang on!", label_msg=True, record_msg=False)
     diff = ImageChops.difference(a, b)
     diff = diff.convert('L')
     # Hack: there is no threshold in PILL,
@@ -57,12 +58,15 @@ def black_or_b(a, b, opacity=0.85):
     # on the final result, simply put "diff" instead of thresholded_diff bellow
     new.paste(b, mask=thresholded_diff)
     shrink = new.filter(ImageFilter.MaxFilter(3))
-    grow = shrink.filter(ImageFilter.MinFilter(15))
+    grow = shrink.filter(ImageFilter.MinFilter(17))
+    
     #outline  = grow.copy()
     outline = ImageChops.difference(grow, new)
+    #outline2 = outline.filter(ImageFilter.MinFilter(5))
     #outline.paste(shade, mask=mask)
     redmask = new_color(size, color=(130,  166,  175, 100))#"#C0A60")#(230,  66,  75))
     redmask.paste(shade, mask=outline)
+    tellUser("displaying differences", label_msg=True, record_msg=False)
     return redmask
 
 
@@ -268,6 +272,7 @@ def button6_diff_clicked():
     
 
 def tellUser(text_to_output, label_msg=True, record_msg=True):
+    global window
     # Insert The text.
     if record_msg:
         text_area["state"] = tk.NORMAL
@@ -277,6 +282,8 @@ def tellUser(text_to_output, label_msg=True, record_msg=True):
         text_area["state"] = tk.DISABLED
     if label_msg:
         layer_similarity_label['text'] = text_to_output
+        window.update_idletasks()
+        
  
 #from: https://stackoverflow.com/questions/17355902/tkinter-binding-mousewheel-to-scrollbar 
 # doesn't work... 
