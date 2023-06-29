@@ -1,12 +1,10 @@
 import os
 import tkinter as tk
 from tkinter import filedialog
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageChops, ImageDraw
 import pygerber as pyg
 import pygerber.API2D as api
-
 import difflib as dl
-
 import color_generator as cg
 
 #from pygerber.types import ColorSet
@@ -20,6 +18,36 @@ right_file_list = []
 left_to_right_dict = {}
 active_left_index = None
 colorGen = cg.color_generator()
+active_layer_image_left = None
+active_layer_image_right = None
+
+point_table = ([0] + ([255] * 255))
+# from: https://stackoverflow.com/questions/30277447/compare-two-images-and-highlight-differences-along-on-the-second-image
+def new_gray(size, color):
+    img = Image.new('L',size)
+    dr = ImageDraw.Draw(img)
+    dr.rectangle((0,0) + size, color)
+    return img
+
+def black_or_b(a, b, opacity=0.85):
+    diff = ImageChops.difference(a, b)
+    diff = diff.convert('L')
+    # Hack: there is no threshold in PILL,
+    # so we add the difference with itself to do
+    # a poor man's thresholding of the mask: 
+    #(the values for equal pixels-  0 - don't add up)
+    thresholded_diff = diff
+    for repeat in range(3):
+        thresholded_diff  = ImageChops.add(thresholded_diff, thresholded_diff)
+    h,w = size = diff.size
+    mask = new_gray(size, int(255 * (opacity)))
+    shade = new_gray(size, 0)
+    new = a.copy()
+    new.paste(shade, mask=mask)
+    # To have the original image show partially
+    # on the final result, simply put "diff" instead of thresholded_diff bellow
+    new.paste(b, mask=thresholded_diff)
+    return new
 
 
 def update_file_pairs():
@@ -38,7 +66,7 @@ def update_file_pairs():
         tellUser("no files in right list", label_msg=False)
 
 def get_layer_similarity(left_index):
-    global left_file_list, right_file_list, left_to_right_dict, directories
+    global left_file_list, right_file_list, left_to_right_dict, directories, active_layer_image_left, active_layer_image_right
     left_file_path = os.path.join(directories[0], left_file_list[left_index])
     print(left_file_path)
     with open(left_file_path, "r") as left_file:
@@ -50,9 +78,13 @@ def get_layer_similarity(left_index):
                 tellUser("file: "+str(left_file_list[left_index])+" is identical")
             elif similarity.ratio() >= .2:
                 tellUser("file: "+str(left_file_list[left_index])+" is "+str(similarity.ratio() * 100.0)+"% similar")
+                c = colorGen.getWhite()
+                #c, rgb = colorGen.getNextColorSet()
+                print(c)
+                active_layer_image_left = pyg.API2D.render_file(left_file_path, colors=c )
+                active_layer_image_right = pyg.API2D.render_file(right_file_path, colors=c )
             else:
                 tellUser("files: "+str(left_file_list[left_index])+" have same name but differ greatly")         
-
 
 def load_images(directory):
     global photos
@@ -93,12 +125,28 @@ def show_image(image, full_filename):
     
     
 def layer_selected(image, full_filename, index):
-    #TODO: if the right index exists in the dictionary then it 
-    #      looks at the wrong layer!
-    #BUG: 
-    #FIXME:  Please!
-    if index in left_to_right_dict:
-        get_layer_similarity(index)
+    global active_left_index
+    #TODO: this is a hacky way of finding the left-to-right lookup - is there a better way?
+    
+    # extract directory from full_filename -
+    dirname = os.path.dirname(full_filename)
+    active_left_index = None
+    print("layer selected")
+    print(directories)
+    print(dirname)
+    print("---")
+    if dirname == directories[0]: #LHS selected
+        if index in left_to_right_dict:
+            get_layer_similarity(index)
+            active_left_index = index
+    elif dirname == directories[1]: #RHS selected
+        print ("lhs value  (from rhs lookup)")
+        keyFromValue = list(left_to_right_dict.keys())[list(left_to_right_dict.values()).index(index)]
+        print(keyFromValue)
+        active_left_index = keyFromValue
+    if active_left_index:
+        #there is an active pair for this layer...
+        print("active layer selected")
     show_image(image, full_filename)
     #set the matched layer to selected bg = "grey"
     print(full_filename)
@@ -196,7 +244,12 @@ def button5_zoomout_clicked():
     print("Button 5 clicked zoom -\n\n *** NOT IMPLEMENTED ***\n\n")
 
 def button6_diff_clicked():
-    print("Button 6 clicked (hightlight differences)\n\n *** NOT IMPLEMENTED ***\n\n")
+    if active_left_index is None:
+        tellUser("Active layer unpaired - nothing to highlight")
+        return
+    diff_image = black_or_b(active_layer_image_left, active_layer_image_right)
+    show_image (diff_image, "diff_"+str(active_left_index))
+    
 
 def tellUser(text_to_output, label_msg=True, record_msg=True):
     # Insert The text.
@@ -261,13 +314,12 @@ toolbar_frame.pack(side="top", fill="x")
 
 text_frame = tk.Frame(window, height = 150)
 text_area = tk.Text(text_frame, pady=5, padx=5, bg = "white", state=tk.NORMAL)
+# TODO: scrollbar didn't work - not needed, but maybe return to this
 #text_scrollbar = tk.Scrollbar(text_frame, orient=tk.VERTICAL, command=text_area.yview)
 #text_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 text_frame.pack_propagate(0)
 text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-text_frame.pack(side=tk.BOTTOM, fill=tk.BOTH)#"x")
-#text_area["state"] = tk.NORMAL
-#text_area.configure(height=200)
+text_frame.pack(side=tk.BOTTOM, fill=tk.BOTH)
 text_area.insert(tk.END, "Ready to compare gerber files")
 text_area.see("end")
 text_area["state"] = tk.DISABLED
