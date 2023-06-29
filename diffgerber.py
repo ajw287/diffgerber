@@ -1,7 +1,7 @@
 import os
 import tkinter as tk
 from tkinter import filedialog
-from PIL import Image, ImageTk, ImageChops, ImageDraw
+from PIL import Image, ImageTk, ImageChops, ImageDraw, ImageFilter
 import pygerber as pyg
 import pygerber.API2D as api
 import difflib as dl
@@ -22,11 +22,20 @@ active_layer_image_left = None
 active_layer_image_right = None
 
 point_table = ([0] + ([255] * 255))
+# diff code using only pillow
 # from: https://stackoverflow.com/questions/30277447/compare-two-images-and-highlight-differences-along-on-the-second-image
+# erode dilate using pillow:
+# from: https://stackoverflow.com/questions/44195007/equivalents-to-opencvs-erode-and-dilate-in-pil
 def new_gray(size, color):
     img = Image.new('L',size)
     dr = ImageDraw.Draw(img)
-    dr.rectangle((0,0) + size, color)
+    dr.rectangle((0,0) + size, fill=color)
+    return img
+
+def new_color(size, color):
+    img = Image.new(mode="RGBA", size=size)
+    dr = ImageDraw.Draw(img)
+    dr.rectangle((0,0) + size, fill=color)
     return img
 
 def black_or_b(a, b, opacity=0.85):
@@ -47,7 +56,14 @@ def black_or_b(a, b, opacity=0.85):
     # To have the original image show partially
     # on the final result, simply put "diff" instead of thresholded_diff bellow
     new.paste(b, mask=thresholded_diff)
-    return new
+    shrink = new.filter(ImageFilter.MaxFilter(3))
+    grow = shrink.filter(ImageFilter.MinFilter(15))
+    #outline  = grow.copy()
+    outline = ImageChops.difference(grow, new)
+    #outline.paste(shade, mask=mask)
+    redmask = new_color(size, color=(130,  166,  175, 100))#"#C0A60")#(230,  66,  75))
+    redmask.paste(shade, mask=outline)
+    return redmask
 
 
 def update_file_pairs():
@@ -247,7 +263,7 @@ def button6_diff_clicked():
     if active_left_index is None:
         tellUser("Active layer unpaired - nothing to highlight")
         return
-    diff_image = black_or_b(active_layer_image_left, active_layer_image_right)
+    diff_image = black_or_b(active_layer_image_left, active_layer_image_right, opacity=0.85)
     show_image (diff_image, "diff_"+str(active_left_index))
     
 

@@ -11,9 +11,9 @@ class color_generator():
     WHITE = None
     
     def __init__(self):
-        for i in range(73,135): # range numbers need to be away from 1, but are not important
+        for i in range(173,285): # range numbers need to be away from 1, but are not important
             self.LIST_OF_COLORS.append(ColorSet(
-                             (( (i+23)*self.LARGE_PRIME[0])%200, ((i+253)*self.LARGE_PRIME[1])%255, ((i+3)*self.LARGE_PRIME[2])%255 , 160),
+                             (( (i+23)*self.LARGE_PRIME[0])%150, ((i+253)*self.LARGE_PRIME[1])%255, ((i+3)*self.LARGE_PRIME[2])%255 , 160),
                              (100,100,100, 50),
                              ( 50, 50, 50, 50),
             ))
