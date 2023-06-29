@@ -14,12 +14,13 @@ from pygerber.parser.pillow.parser import ColorSet
 
 photos  = []
 imageDict = {}
-directories  = ["", ""]
+directories  = ["", ""] # {left_frame: "", right_frame: ""}
 left_file_list  = []
 right_file_list = []
 left_to_right_dict = {}
 active_left_index = None
 colorGen = cg.color_generator()
+
 
 def update_file_pairs():
     global left_file_list, right_file_list, left_to_right_dict
@@ -92,24 +93,28 @@ def show_image(image, full_filename):
     
     
 def layer_selected(image, full_filename, index):
-    #TODO: if the right index exists in the dictionary then it looks at the wrong layer!
+    #TODO: if the right index exists in the dictionary then it 
+    #      looks at the wrong layer!
     #BUG: 
     #FIXME:  Please!
     if index in left_to_right_dict:
-        get_layer_similarity(left_index)
+        get_layer_similarity(index)
     show_image(image, full_filename)
+    #set the matched layer to selected bg = "grey"
+    print(full_filename)
     
 def hide_image(image, full_filename):
     print("remove the image from the photos")
 
 def directory_selected(frame, directory_entry):
-    global left_file_list, right_file_list, directories
+    global left_file_list, right_file_list, directories, frame_images, frame_checkboxes, frame_selected_layer_vars
     """Handle the event when a directory is selected."""
     selected_directory = filedialog.askdirectory()
     if selected_directory:
         directory_entry.delete(0, tk.END)
         directory_entry.insert(tk.END, selected_directory)
         images, filenames, layer_colors = load_images(selected_directory)
+        frame_images.update({frame: images})
 
         # Clear the checkboxes
         for checkbox in frame_checkboxes[frame]:
@@ -118,20 +123,26 @@ def directory_selected(frame, directory_entry):
 
         # Create checkboxes
         for i, image in enumerate(images):
+            frame_selected_layer_vars[frame].append(tk.StringVar())
             checkbox = tk.Checkbutton(
                 frame,
                 #text=f"Image {i+1}",
                 text = filenames[i],
-                variable=selected_images_var,
+                variable=frame_selected_layer_vars[frame][i],
                 onvalue=i,
+                #font = 12,
+                #width = 10,
+                #height = 1,
+                #image=checkbutton_image,
                 offvalue=-1,
                 selectcolor= layer_colors[i],
-                command=lambda i=i: layer_selected( images[i], os.path.join(selected_directory, filenames[i]), i)
+                #command=lambda i=i: layer_selected(frame_images[frame][i], os.path.join(selected_directory, filenames[i]), i) if frame_selected_layer_vars[frame][i].get() == i else None
+                command=lambda i=i: layer_selected( frame_images[frame][i], os.path.join(selected_directory, filenames[i]), i)
                 #command=lambda checked, img=images[i], flnm=filenames[i]: show_image(checked, img, flnm)
             )
             checkbox.pack(anchor="w")
             frame_checkboxes[frame].append(checkbox)
-            tellUser("\nLoaded file: " + filenames[i], label_msg=False, record_msg=True)
+            tellUser("Loaded file: " + filenames[i], label_msg=False, record_msg=True)
 
         #record the directory
         if frame is left_frame:
@@ -313,9 +324,16 @@ canvas.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("
 
 # Right column: List of checkboxes
 #selected_images_var = tk.StringVar()
-selected_images_var = tk.StringVar() # ListVar()#
-selected_images_var.set(0)
+#selected_images_var = tk.StringVar() # ListVar()#
+#selected_images_var.set(0)
+frame_selected_layer_vars = {left_frame: [], right_frame: []}
 frame_checkboxes = {left_frame: [], right_frame: []}
+frame_images = {left_frame: [], right_frame: []}
+
+
+## Create a custom image for the checkbutton
+#checkbutton_image = tk.PhotoImage(file="checkbutton_image.png").subsample(3)  # Adjust the subsample factor to resize the image
+
 
 # Run the GUI
 window.mainloop()
