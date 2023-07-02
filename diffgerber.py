@@ -1,12 +1,11 @@
 import os
 import tkinter as tk
+from tkinter import ttk
 from tkinter import filedialog
 from PIL import Image, ImageTk, ImageChops, ImageDraw, ImageFilter
-import pygerber as pyg
-import pygerber.API2D as api
 import difflib as dl
 import color_generator as cg
-
+import loader
 #from pygerber.types import ColorSet
 from pygerber.parser.pillow.parser import ColorSet
 
@@ -20,6 +19,8 @@ active_left_index = None
 colorGen = cg.color_generator()
 active_layer_image_left = None
 active_layer_image_right = None
+file_loader = loader.gerbLoader()
+#file_loader.loadImage("./example/1/top.gbr", colorGen.getNextColorSet())
 
 point_table = ([0] + ([255] * 255))
 # diff code using only pillow
@@ -101,8 +102,8 @@ def get_layer_similarity(left_index):
                 c = colorGen.getWhite()
                 #c, rgb = colorGen.getNextColorSet()
                 print(c)
-                active_layer_image_left = pyg.API2D.render_file(left_file_path, colors=c )
-                active_layer_image_right = pyg.API2D.render_file(right_file_path, colors=c )
+                active_layer_image_left =  file_loader.loadImage(left_file_path, color=c ) 
+                active_layer_image_right = file_loader.loadImage(right_file_path, color=c )
             else:
                 tellUser("files: "+str(left_file_list[left_index])+" have same name but differ greatly")         
 
@@ -121,7 +122,8 @@ def load_images(directory):
         elif filename.decode().endswith((".gbr", ".grb")):
             filepath = os.path.join(directory, filename.decode())
             c, rgb = colorGen.getNextColorSet()
-            image = pyg.API2D.render_file(filepath, colors=c )
+            #image = pyg.API2D.render_file(filepath, colors=c )
+            image = file_loader.loadImage(filepath, color=c )
             images.append(image)
             filenames.append(filename.decode())
             layer_colors.append(rgb)
@@ -179,6 +181,8 @@ def directory_select_btn(frame, directory_entry):
     selected_directory = filedialog.askdirectory()
     if selected_directory:
         directory_selected(frame, directory_entry, selected_directory)
+    tellUser("Please wait... loading gerbers")
+    tellUser("directory "+ selected_directory, label_msg=False)
 
 def directory_selected(frame, directory_entry, selected_directory):
     global left_file_list, right_file_list, directories, frame_images, frame_checkboxes, frame_selected_layer_vars
@@ -281,7 +285,12 @@ def button6_diff_clicked():
         return
     diff_image = black_or_b(active_layer_image_left, active_layer_image_right, opacity=0.85)
     show_image (diff_image, "diff_"+str(active_left_index))
-    
+
+def import_option_selected(event):
+    global loader
+    selected_option = import_option.get()
+    loader.option = selected_option
+    tellUser("Set to " + selected_option)
 
 def tellUser(text_to_output, label_msg=True, record_msg=True):
     global window
@@ -331,14 +340,27 @@ button2.pack(side="left", padx=5, pady=5)
 button3 = tk.Button(toolbar_frame, text="Export Image", command=button3_export_clicked)
 button3.pack(side="left", padx=5, pady=5)
 
-button4 = tk.Button(toolbar_frame, text="Zoom +", command=button4_zoomin_clicked)
+button4 = tk.Button(toolbar_frame, text="🔎zoom🔍☐", command=button4_zoomin_clicked)
 button4.pack(side="left", padx=5, pady=5)
 
-button5 = tk.Button(toolbar_frame, text="Zoom -", command=button5_zoomout_clicked)
-button5.pack(side="left", padx=5, pady=5)
+#button5 = tk.Button(toolbar_frame, text="Zoom -", command=button5_zoomout_clicked)
+#button5.pack(side="left", padx=5, pady=5)
 
 button6 = tk.Button(toolbar_frame, text="Hightlight Differences", command=button6_diff_clicked)
 button6.pack(side="left", padx=5, pady=5)
+
+# toolbar for choosing the importer code
+# List of options for the drop-down menu
+import_options = ["Import using pygerber", "Import using pcb-tools"]
+# Variable to store the selected import option
+import_option = tk.StringVar()
+import_option.set(import_options[0])
+# Create the drop-down menu
+option_dropdown = ttk.Combobox(toolbar_frame, textvariable=import_option, values=import_options, state="readonly")
+option_dropdown.pack(side=tk.LEFT, padx=5, pady=5)
+# Bind the event when the selection is changed
+option_dropdown.bind("<<ComboboxSelected>>", import_option_selected)
+
 
 layer_similarity_label = tk.Label(toolbar_frame, text="Select directories to compare gerber files in")#text="Selected Layers are not paired")
 layer_similarity_label.pack(side=tk.RIGHT, padx = 30, pady = 10)
@@ -420,6 +442,8 @@ frame_images = {left_frame: [], right_frame: []}
 
 ## Create a custom image for the checkbutton
 #checkbutton_image = tk.PhotoImage(file="checkbutton_image.png").subsample(3)  # Adjust the subsample factor to resize the image
+
+
 
 
 # Run the GUI
