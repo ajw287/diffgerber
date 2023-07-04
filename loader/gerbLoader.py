@@ -75,7 +75,7 @@ class gerbLoader():
                 img = Image.open(BytesIO(rawbytes))
                 img.convert("RGBA")
                 self.color_to_alpha(img, (0,0,0,0))
-                img.putalpha(127)
+                img.putalpha(210)
                 #img.show()
                 return img
                 #pcb.render(pcb_file, img) 
