@@ -2,6 +2,18 @@
 Graphical tool to help users compare gerber files, the output from PCB CAD software
 
 # Setup
+
+1. Install in editable format:
+
+```bash
+git clone https://github.com/ajw287/diffgerber.git
+cd diffgerber
+python3 -venv venv
+source ./venv/bin/activate
+pip install -e .
+```
+## Or: 
+
 This project depends on python3, pillow, tkinter, difflib & pygerber.  The following commands are recommended:
 
 1. Setup a python venv
