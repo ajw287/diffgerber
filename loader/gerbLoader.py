@@ -49,6 +49,8 @@ class gerbLoader():
                 c,rgbstr = self.color.getNextColor()
                 ctx = GerberCairoContext()
                 ctx.max_width = 800
+                img_scale = 10
+                ctx.scale = (img_scale, img_scale)
                 camfile.render(ctx)
     #            camfile = gerber.load_layer(file_path, max_width=1940)
     #            ctx = GerberCairoContext()
