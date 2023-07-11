@@ -182,7 +182,7 @@ def directory_select_btn(frame, directory_entry):
     if selected_directory:
         directory_selected(frame, directory_entry, selected_directory)
     tellUser("Please wait... loading gerbers")
-    tellUser("directory "+ selected_directory, label_msg=False)
+    tellUser("directory "+ str(selected_directory), label_msg=False)
 
 def directory_selected(frame, directory_entry, selected_directory):
     global left_file_list, right_file_list, directories, frame_images, frame_checkboxes, frame_selected_layer_vars
@@ -287,9 +287,9 @@ def button6_diff_clicked():
     show_image (diff_image, "diff_"+str(active_left_index))
 
 def import_option_selected(event):
-    global loader
+    global file_loader
     selected_option = import_option.get()
-    loader.option = selected_option
+    file_loader.option = selected_option
     tellUser("Set to " + selected_option)
 
 def tellUser(text_to_output, label_msg=True, record_msg=True):
@@ -351,6 +351,9 @@ button6.pack(side="left", padx=5, pady=5)
 
 # toolbar for choosing the importer code
 # List of options for the drop-down menu
+backend_label = tk.Label(toolbar_frame, text="backend:")
+backend_label.pack(side=tk.LEFT, padx = 5, pady = 10)
+
 import_options = ["Import using pygerber", "Import using pcb-tools"]
 # Variable to store the selected import option
 import_option = tk.StringVar()
@@ -360,7 +363,8 @@ option_dropdown = ttk.Combobox(toolbar_frame, textvariable=import_option, values
 option_dropdown.pack(side=tk.LEFT, padx=5, pady=5)
 # Bind the event when the selection is changed
 option_dropdown.bind("<<ComboboxSelected>>", import_option_selected)
-
+selected_option = import_option.get()
+file_loader.option = selected_option
 
 layer_similarity_label = tk.Label(toolbar_frame, text="Select directories to compare gerber files in")#text="Selected Layers are not paired")
 layer_similarity_label.pack(side=tk.RIGHT, padx = 30, pady = 10)

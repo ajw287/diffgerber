@@ -13,7 +13,7 @@ from io import BytesIO
 class gerbLoader():
     option = None
     def __init__(self):
-        self.option = "Import using pcb-tools"
+        #self.option = "Import using pcb-tools"
         self.color = simple_color_generator.simple_color_generator()
         #print ("initialised gerbLoader")
 
@@ -41,15 +41,16 @@ class gerbLoader():
 
     def loadImage(self, file_path, color):
         if self.option == "Import using pygerber":
+            print("importing file: "+file_path+" using " + self.option)
             return pyg.API2D.render_file(file_path, colors=color) 
         elif self.option == "Import using pcb-tools":
-                print("importing file: "+file_path)
+                print("importing file: "+file_path+" using " + self.option)
                 # Load the Gerber file
                 camfile = gerber.read(file_path)
                 c,rgbstr = self.color.getNextColor()
                 ctx = GerberCairoContext()
                 ctx.max_width = 800
-                img_scale = 10
+                img_scale = 10  # 'magic' scale that looks ok for kicad gerbers
                 ctx.scale = (img_scale, img_scale)
                 camfile.render(ctx)
     #            camfile = gerber.load_layer(file_path, max_width=1940)
@@ -82,5 +83,7 @@ class gerbLoader():
                 return img
                 #pcb.render(pcb_file, img) 
         else:
-            return pyg.API2D.render_file(file_path, colors=colors)
+            print(self.option)
+            exit()
+            #return pyg.API2D.render_file(file_path, colors=colors)
     
