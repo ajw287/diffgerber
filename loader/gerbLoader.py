@@ -1,14 +1,19 @@
 from . import simple_color_generator
-from PIL import Image
+from PIL import Image, ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 import pygerber as pyg
 from pygerber import API2D
+#from pygerber.parser.pillow import ColorSet
 import gerber
 #import gerber.render
 from gerber.render.cairo_backend import GerberCairoContext
 #from gerber.render import GerberCairoContext
 from gerber import pcb
 from io import BytesIO
+import subprocess
+from typing import Tuple
 
+from pygerber.parser.pillow.parser import ColorSet
 
 class gerbLoader():
     """
@@ -20,6 +25,46 @@ class gerbLoader():
         #self.option = "Import using pcb-tools"
         self.color = simple_color_generator.simple_color_generator()
         #print ("initialised gerbLoader")
+
+    def get_image_from_gerbv(self, path, color):
+        hex = color[1]
+        try:
+            result = subprocess.run([
+                "gerbv",
+                "--export=png",
+                "-o",
+                "./tmp.png",
+                f"--background=#050515",
+                f"--foreground={hex}",
+                "--dpi=600",
+                #"--window=5709x1576",
+                f"{path}",
+            ]
+            , check=True)
+            # Process completed successfully
+            layerImage = Image.open(r'./tmp.png')
+            layerImage.convert("RGBA")
+            self.color_to_alpha(layerImage, (0,0,0,0))
+            print("Process completed with return code:", result.returncode)
+            return layerImage
+        except subprocess.CalledProcessError as e:
+            # Process returned non-zero exit status
+            print("Error executing the command:\n")
+            print(e)
+            print("\nCheck that you have 'gerbv' installed and can run it.")
+            return None
+        #subprocess.run(
+        #    [
+        #        "gerbview",
+        #        f"--export={type}",
+        #        "-o",
+        #        f"{folder_name}/{name}.png",
+        #        "--dpi=1000",
+        #        #"--window=5709x1576",
+        #        f"{path}",
+        #    ],
+        #    check=True,
+        #)
 
     def get_image_size(self, gerber_data):
         min_x, max_x, min_y, max_y = float('inf'), float('-inf'), float('inf'), float('-inf')
@@ -43,15 +88,20 @@ class gerbLoader():
                 if pixdata[x, y] == col:
                     pixdata[x, y] = (255, 255, 255, 0)
 
-    def loadImage(self, file_path, color):
+    def loadImage(self, file_path, color=None):
+        if color == None:
+            color = self.color.getNextColor()
+        c, rgb = color
+        print(c)
+        print(rgb)
         if self.option == "Import using pygerber":
             print("importing file: "+file_path+" using " + self.option)
-            return pyg.API2D.render_file(file_path, colors=color) 
+            return pyg.API2D.render_file(file_path, colors=ColorSet(c[0], c[1], c[2])), rgb
         elif self.option == "Import using pcb-tools":
                 print("importing file: "+file_path+" using " + self.option)
                 # Load the Gerber file
                 camfile = gerber.read(file_path)
-                c,rgbstr = self.color.getNextColor()
+                #c,rgbstr = self.color.getNextColor()
                 # doesn't work ctx = GerberCairoContext(scale=0.1)
                 ctx = GerberCairoContext()
                 ctx.max_width = 800
@@ -86,8 +136,14 @@ class gerbLoader():
                 self.color_to_alpha(img, (0,0,0,0))
                 img.putalpha(210)
                 #img.show()
-                return img
-                #pcb.render(pcb_file, img) 
+                return img, rgb
+                #pcb.render(pcb_file, img)
+        elif  self.option == "Import using gerbv":
+            img = self.get_image_from_gerbv(file_path, color)
+            if img is None:
+                print("\n\nfailed to get an image back from gerbv\n")
+                exit()
+            return img, rgb
         else:
             print(self.option)
             exit()

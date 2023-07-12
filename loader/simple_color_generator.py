@@ -31,15 +31,14 @@ class simple_color_generator():
         self.counter = 0
 
     def getWhite(self):
-        return self.WHITE
+        rgbstr = '#%02x%02x%02x%02x' % self.WHITE[0]
+        return self.WHITE, rgbstr
 
     def getBrightRed(self):
-        return self.BRIGHT_RED
+        rgbstr = '#%02x%02x%02x%02x' % self.BRIGHT_RED[0]
+        return self.BRIGHT_RED, rgbstr
 
     def getNextColor(self):
         self.counter= (self.counter+1) % len(self.LIST_OF_COLORS)
-        #print(self.LIST_OF_COLORS[self.counter].dark)
-        #rgb = '#%02x%02x%02x%02x' % self.LIST_OF_COLORS[self.counter]
-        #print("rgb:" +str(rgb))
-        rgb = "    "
+        rgb = '#%02x%02x%02x%02x' % self.LIST_OF_COLORS[self.counter][0]
         return self.LIST_OF_COLORS[self.counter], rgb[:-2]

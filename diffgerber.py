@@ -4,7 +4,7 @@ from tkinter import ttk
 from tkinter import filedialog
 from PIL import Image, ImageTk, ImageChops, ImageDraw, ImageFilter
 import difflib as dl
-import color_generator as cg
+#import color_generator as cg
 import loader
 #from pygerber.types import ColorSet
 from pygerber.parser.pillow.parser import ColorSet
@@ -16,11 +16,9 @@ left_file_list  = []
 right_file_list = []
 left_to_right_dict = {}
 active_left_index = None
-colorGen = cg.color_generator()
 active_layer_image_left = None
 active_layer_image_right = None
 file_loader = loader.gerbLoader()
-#file_loader.loadImage("./example/1/top.gbr", colorGen.getNextColorSet())
 
 point_table = ([0] + ([255] * 255))
 # diff code using only pillow
@@ -99,11 +97,9 @@ def get_layer_similarity(left_index):
                 tellUser("file: "+str(left_file_list[left_index])+" is identical")
             elif similarity.ratio() >= .2:
                 tellUser("file: "+str(left_file_list[left_index])+" is "+str(similarity.ratio() * 100.0)+"% similar")
-                c = colorGen.getWhite()
-                #c, rgb = colorGen.getNextColorSet()
-                print(c)
-                active_layer_image_left =  file_loader.loadImage(left_file_path, color=c ) 
-                active_layer_image_right = file_loader.loadImage(right_file_path, color=c )
+                c = file_loader.color.getWhite()
+                active_layer_image_left, lw =  file_loader.loadImage(left_file_path, color=c ) 
+                active_layer_image_right, rw = file_loader.loadImage(right_file_path, color=c )
             else:
                 tellUser("files: "+str(left_file_list[left_index])+" have same name but differ greatly")         
 
@@ -121,9 +117,7 @@ def load_images(directory):
             filenames.append(filename.decode())
         elif filename.decode().endswith((".gbr", ".grb")):
             filepath = os.path.join(directory, filename.decode())
-            c, rgb = colorGen.getNextColorSet()
-            #image = pyg.API2D.render_file(filepath, colors=c )
-            image = file_loader.loadImage(filepath, color=c )
+            image, rgb = file_loader.loadImage(filepath)
             images.append(image)
             filenames.append(filename.decode())
             layer_colors.append(rgb)
@@ -354,13 +348,13 @@ button6.pack(side="left", padx=5, pady=5)
 backend_label = tk.Label(toolbar_frame, text="backend:")
 backend_label.pack(side=tk.LEFT, padx = 5, pady = 10)
 
-import_options = ["Import using pygerber", "Import using pcb-tools"]
+import_options = ["Import using pygerber", "Import using pcb-tools", "Import using gerbv"]
 # Variable to store the selected import option
 import_option = tk.StringVar()
 import_option.set(import_options[0])
 # Create the drop-down menu
 option_dropdown = ttk.Combobox(toolbar_frame, textvariable=import_option, values=import_options, state="readonly")
-option_dropdown.pack(side=tk.LEFT, padx=5, pady=5)
+option_dropdown.pack(side=tk.LEFT, padx=1, pady=5)
 # Bind the event when the selection is changed
 option_dropdown.bind("<<ComboboxSelected>>", import_option_selected)
 selected_option = import_option.get()
@@ -385,7 +379,6 @@ text_area.insert(tk.END, "Ready to compare gerber files")
 text_area.see("end")
 text_area["state"] = tk.DISABLED
 
-
 # Create the three vertical columns
 left_frame = tk.Frame(main_frame, width=75)
 left_frame.pack(side="left", padx=10, fill=tk.Y, expand=False)
@@ -393,7 +386,6 @@ middle_frame = tk.Frame(main_frame)
 middle_frame.pack(side="left", fill=tk.BOTH, expand=True)
 right_frame = tk.Frame(main_frame, width=150)
 right_frame.pack(side="right", padx=10, fill=tk.Y, expand=False)
-
 
 # Left column: Directory selector
 left_directory_label = tk.Label(left_frame, text="Gerber directory 1:")
@@ -443,12 +435,8 @@ frame_selected_layer_vars = {left_frame: [], right_frame: []}
 frame_checkboxes = {left_frame: [], right_frame: []}
 frame_images = {left_frame: [], right_frame: []}
 
-
 ## Create a custom image for the checkbutton
 #checkbutton_image = tk.PhotoImage(file="checkbutton_image.png").subsample(3)  # Adjust the subsample factor to resize the image
-
-
-
 
 # Run the GUI
 window.mainloop()
