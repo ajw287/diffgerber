@@ -11,6 +11,10 @@ from io import BytesIO
 
 
 class gerbLoader():
+    """
+    gerbLoader is an abstraction layer
+    there are at least three ways to load a gerber file.  :(
+    """
     option = None
     def __init__(self):
         #self.option = "Import using pcb-tools"
@@ -48,8 +52,10 @@ class gerbLoader():
                 # Load the Gerber file
                 camfile = gerber.read(file_path)
                 c,rgbstr = self.color.getNextColor()
+                # doesn't work ctx = GerberCairoContext(scale=0.1)
                 ctx = GerberCairoContext()
                 ctx.max_width = 800
+                # can be initialised with a scale...
                 img_scale = 10  # 'magic' scale that looks ok for kicad gerbers
                 ctx.scale = (img_scale, img_scale)
                 camfile.render(ctx)
