@@ -3,12 +3,31 @@ from tkinter import ttk
 from tkinter import filedialog
 import os
 
+
+non_gerber_but_related = ['*-PTH.drl', '*.drl', '*.txt', '*.xln', '*.exc', '*.drd', '*.tap', '*.fab.gbr', '*.plated-drill.cnc', 'drl', '*-NPTH.drl', '*-User?Eco1.*', '*-Eco1?User.*', 'vcut', '*.gm1', '*-Edge?Cuts.*', '*.gko', '*.gm3', '*.dim', '*.gml', '*.fab', '*.out.gbr', '*.boardout.ger', 'ko',]
+
+
 class dirSelectDialog():
     """
     dirSelectDialog a dialog that lets you select a 
     gerber file or a directory and opens the directory 
     that contains the file (or the directory) - sounds simple... not at all!
     """
+    gerber_filetypes = (
+                '*.gtp', '*-F*Paste.*', '*.crc', '*.tsp', '*.stp', '*.toppaste.gbr', '*.tcream.ger',
+                '*.gto', '*-F*SilkS.*', '*.plc', '*.tsk', '*.sst', '*.topsilk.gbr', '*.topsilkscreen.ger', 'to',
+                '*.gts', '*-F*Mask.*', '*.stc', '*.tsm', '*.smt', '*.topmask.gbr', '*.topsoldermask.ger', 'ts',
+                '*.gtl', '*-L1.*', '*.g1', '*-F*Cu*', '*.cmp', '*.top', '*.top.gbr', '*.toplayer.ger', 'tl',
+                '*.g1', '*.g2', '*-L2.*', '*-In1*Cu*', '*-Inner1*Cu*', '*.ly1', '*.ly2', '*.in1', '*.internalplane1.ger', '*.gbl', '*-B*Cu*', '*.sol', '*.bot', '*.bottom.gbr', '*.bottomlayer.ger', 'l2', 'bl',
+                '*.g2', '*.g3', '*-L3.*', '*-In2*Cu*', '*-Inner2*Cu*', '*.ly2', '*.ly3', '*.in2', '*.internalplane2.ger', '*.gbl', '*-B*Cu*', '*.sol', '*.bot', '*.bottom.gbr', '*.bottomlayer.ger', 'l3', 'bl',
+                '*.g3', '*.g4', '*-L4.*', '*-In3*Cu*', '*-Inner3*Cu*', '*.ly3', '*.ly4', '*.in3', '*.internalplane3.ger', '*.gbl', '*-B*Cu*', '*.sol', '*.bot', '*.bottom.gbr', '*.bottomlayer.ger', 'l4', 'bl',
+                '*.g4', '*.g5', '*-L5.*', '*-In4*Cu*', '*-Inner4*Cu*', '*.ly4', '*.ly5', '*.in4', '*.internalplane4.ger', '*.gbl', '*-B*Cu*', '*.sol', '*.bot', '*.bottom.gbr', '*.bottomlayer.ger', 'l5', 'bl',
+                '*.g5', '*.g6', '*-L6.*', '*.gbl', '*-B*Cu*', '*.sol', '*.bot', '*.bottom.gbr', '*.bottomlayer.ger', 'bl',
+                '*.gbs', '*-B*Mask.*', '*.sts', '*.bsm', '*.smb', '*.bottommask.gbr', '*.bottomsoldermask.ger', 'bs',
+                '*.gbo', '*-B*SilkS.*', '*.pls', '*.bsk', '*.ssb', '*.bottomsilk.gbr', '*.bottomsilkscreen.ger',
+                '*.gbp', '*-B*Paste.*', '*.crs', '*.bsp', '*.spb', '*.bottompaste.gbr', '*.bcream.ger',
+    )
+
     def __init__(self, parent = None):
         if parent is None:
             self.root = tk.Tk()
@@ -16,17 +35,22 @@ class dirSelectDialog():
             self.root = parent
         self.selected_directory = None
         self.nav_path = os.getcwd()
-        self.file_filter = {"PNG images": (".png"), "Gerber files": (".gbr", ".grb"), "All files": ("*.*")}  # Example file filters
+        self.file_filter = {"PNG images": (".png"), "GerberX2 files": (".gbr", ".grb"), "All known gerbers":self.gerber_filetypes, "All files": ("*.*")}  # Example file filters
         self.filter_var = tk.StringVar()
         self.dialog = None
         self.dialogFlag = False
 
     def browse(self):
-        filetypes = [("PNG files", "*.png"), ("Gerber files", (".gbr", ".grb")), ("Python files", "*.py"), ("All files", "*.*")]
+        #filetypes = [("PNG files", "*.png"), ("GerberX2 files", (".gbr", ".grb")), ("All known gerbers", self.gerber_filetypes), ("Python files", "*.py"), ("All files", "*.*")]
         self.dialog = tk.Toplevel(self.root)
         self.dialogFlag = True
         self.dialog.title("File Dialog")
-        treeview = ttk.Treeview(self.dialog, columns=("name", "type"), show="headings")
+        self.dialog.geometry('1200x800')
+        
+        #SOLUTION from: https://stackoverflow.com/questions/26957845/ttk-treeview-cant-change-row-height
+        style = ttk.Style(self.dialog)
+        style.configure('gerberFileDialog.Treeview', rowheight=54)  
+        treeview = ttk.Treeview(self.dialog, columns=("name", "type"), show="headings", style='gerberFileDialog.Treeview')
         treeview.heading("name", text="Name")
         treeview.heading("type", text="Type")
 
@@ -74,15 +98,13 @@ class dirSelectDialog():
 
         # Create file filter drop-down box
         
-        self.filter_var.set("Gerber files")  # Set default filter
+        self.filter_var.set("GerberX2 files")  # Set default filter
         filter_dropdown = ttk.Combobox(self.dialog, values=list(self.file_filter.keys()), textvariable=self.filter_var)
         filter_dropdown.pack()
 
         select_button = ttk.Button(self.dialog, text="Select", command=select_item)
         select_button.pack(pady=5)
-
         populate_treeview(os.getcwd())
-
         treeview.bind("<Double-1>", browse_sub_directory)
 
         self.dialog.mainloop()
