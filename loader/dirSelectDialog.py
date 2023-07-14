@@ -45,11 +45,11 @@ class dirSelectDialog():
         self.dialog = tk.Toplevel(self.root)
         self.dialogFlag = True
         self.dialog.title("File Dialog")
-        self.dialog.geometry('1200x800')
+        self.dialog.geometry('600x350')
         
         #SOLUTION from: https://stackoverflow.com/questions/26957845/ttk-treeview-cant-change-row-height
         style = ttk.Style(self.dialog)
-        style.configure('gerberFileDialog.Treeview', rowheight=54)  
+        style.configure('gerberFileDialog.Treeview', rowheight=25)  
         treeview = ttk.Treeview(self.dialog, columns=("name", "type"), show="headings", style='gerberFileDialog.Treeview')
         treeview.heading("name", text="Name")
         treeview.heading("type", text="Type")
