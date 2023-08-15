@@ -1,8 +1,7 @@
 # diffgerber
 Graphical tool to help users compare gerber files, the output from PCB CAD software
 
-I have put in 3 backends, and been disappointed with them all.
-Currently the tool is a bit limited.  pygerber 2.0 promises to make this tool much better!  
+I have put in 3 backends, but I'm plannig to switch to just using pygerber 2.0.0.
 
 
 # Setup
