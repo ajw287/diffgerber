@@ -13,6 +13,7 @@ git clone https://github.com/ajw287/diffgerber.git
 cd diffgerber
 python3 -venv venv
 source ./venv/bin/activate
+pip install -r requirements.txt
 pip install -e .
 ```
 ## Or: 
