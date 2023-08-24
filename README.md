@@ -39,6 +39,8 @@ This is a basic tool to highlight differences in gerber files so that they can b
 
 N.B. at this time (Jul-23) pygerber library only seems to work with a subset of gerber files.
 
+Aug-23:  Going to start on a V2.0 with only pygerber backend. :8
+
 ![Picture of the Gerber Difftool](docs/pics/GerberDifferenceViewer.png?raw=true "diffgerber")
 
 1. Click "Browse" on the left-hand column, navigate to "./example/1/" click "OK".  You should see two layers of gerbers
