@@ -6,8 +6,10 @@ from PIL import Image, ImageTk, ImageChops, ImageDraw, ImageFilter
 import difflib as dl
 #import color_generator as cg
 import loader
+#from pygerber.typs cg
+import loader
 #from pygerber.types import ColorSet
-from pygerber.parser.pillow.parser import ColorSet
+#from pygerber.parser.pillow.parser import ColorSet
 
 photos  = []
 imageDict = {}
