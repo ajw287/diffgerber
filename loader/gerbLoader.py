@@ -10,6 +10,7 @@ from pygerber.gerberx3.api._layers import (
       Rasterized2DLayerParams,
       Rasterized2DBackend,
 )
+#from pygerber.backend.rasterized_2d import Rasterized2DResult
 from pygerber.common.rgba import RGBA
 
 class gerbLoader():
@@ -23,33 +24,38 @@ class gerbLoader():
         self.option = "Import using pygerber"
         self.color = simple_color_generator.simple_color_generator()
         #print ("initialised gerbLoader")
+        self.imageDict = {}
         pass
     
     def loadImage(self, file_path, color=None):
-        if color == None:
-            color = self.color.getNextColor()
-        c, rgb = color
-        cunning_scheme = ColorScheme(
-                            background_color=RGBA.from_rgba(0, 0, 0, 0),
-                            clear_color=RGBA.from_rgba(60, 181, 60, 255),
-                            solid_color=RGBA.from_rgba(*c[0]),
-                            clear_region_color=RGBA.from_rgba(60, 181, 60, 255),
-                            solid_region_color=RGBA.from_rgba(*c[0]),
-                            )
+        if file_path not in self.imageDict : 
+            if color == None:
+                color = self.color.getNextColor()
+            c, rgb = color
+            cunning_scheme = ColorScheme(
+                                background_color=RGBA.from_rgba(0, 0, 0, 0),
+                                clear_color=RGBA.from_rgba(60, 181, 60, 255),
+                                solid_color=RGBA.from_rgba(*c[0]),
+                                clear_region_color=RGBA.from_rgba(60, 181, 60, 255),
+                                solid_region_color=RGBA.from_rgba(*c[0]),
+                                )
 
-        out =  Rasterized2DLayer(
-            options=Rasterized2DLayerParams(
-                    dpi=300,
-                    source_path=file_path,
-                    colors=cunning_scheme,
-            ),
-        )
-        out.render().save("./tmp.png")
-        layerImage = Image.open('./tmp.png')
-        #out_handle =  Rasterized2DResult(out.render())
-        #layerImage = out_handle.get_result_handle().result
-        #layerImage.convert("RGBA")
-        return layerImage, rgb
+            out =  Rasterized2DLayer(
+                options=Rasterized2DLayerParams(
+                        dpi=300,
+                        source_path=file_path,
+                        colors=cunning_scheme,
+                ),
+            )
+            #out.render().save("./tmp.png")
+            #layerImage = Image.open('./tmp.png')
+            layerImage =  out.render()._result_handle.result
+            self.imageDict [file_path] = (layerImage, rgb)
+            #layerImage = out_handle.get_result_handle().result
+            #layerImage.convert("RGBA")
+            return layerImage, rgb
+        else:
+            return self.imageDict[file_path]
 
 #from . import simple_color_generator
 #from PIL import Image, ImageFile
