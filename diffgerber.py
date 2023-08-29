@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import PhotoImage
 from PIL import Image, ImageTk, ImageChops, ImageDraw, ImageFilter
 import difflib as dl
 #import color_generator as cg
@@ -315,6 +316,12 @@ def tellUser(text_to_output, label_msg=True, record_msg=True):
 # Create the main window
 window = tk.Tk()
 window.title("Gerber Difference Viewer")
+
+# Load the icon image
+icon = PhotoImage(file="icon.png")
+
+# Set the application icon
+window.iconphoto(True, icon)
 
 # Calculate the window size based on screen size
 screen_width = window.winfo_screenwidth()
