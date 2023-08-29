@@ -9,7 +9,6 @@ import difflib as dl
 #import color_generator as cg
 import loader
 #from pygerber.typs cg
-import loader
 #from pygerber.types import ColorSet
 #from pygerber.parser.pillow.parser import ColorSet
 
@@ -79,14 +78,14 @@ def black_or_b(a, b, opacity=0.85):
 
 def update_file_pairs():
     global left_file_list, right_file_list, left_to_right_dict
-    print("updating file list" + str(left_file_list))
+    #print("updating file list" + str(left_file_list))
     for left_itr, left,  in enumerate(left_file_list):
         for right_itr, right in enumerate(right_file_list):
             if dl.SequenceMatcher(None, left, right).ratio() == 1.0:
                 left_to_right_dict.update({left_itr: right_itr})
                 tellUser("matched files named:" +left, label_msg=False)
                 get_layer_similarity(left_itr)
-    print()
+    #print()
     if len(left_file_list) == 0:
         tellUser("no files in left list", label_msg=False)
     if len(right_file_list) == 0:
@@ -182,15 +181,16 @@ def directory_select_btn(frame, directory_entry):
     """Handle the event when a directory is selected."""
     selected_directory = filedialog.askdirectory()
     if selected_directory:
+        tellUser("Please wait... loading gerbers")
+        tellUser("directory "+ str(selected_directory), label_msg=False)
         directory_selected(frame, directory_entry, selected_directory)
-    tellUser("Please wait... loading gerbers")
-    tellUser("directory "+ str(selected_directory), label_msg=False)
 
 def directory_selected(frame, directory_entry, selected_directory):
     global left_file_list, right_file_list, directories, frame_images, frame_checkboxes, frame_selected_layer_vars
     directory_entry.delete(0, tk.END)
     directory_entry.insert(tk.END, selected_directory)
     images, filenames, layer_colors = load_images(selected_directory)
+    tellUser("loaded: "+selected_directory)
     frame_images.update({frame: images})
 
     # Clear the checkboxes
