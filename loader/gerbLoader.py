@@ -1,11 +1,14 @@
 from PIL import Image, ImageFile
 from . import simple_color_generator
-from pygerber.backend.rasterized_2d import Rasterized2DBackend
+#from pygerber.backend.rasterized_2d import Rasterized2DBackend
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 
 from pygerber.gerberx3.api import ColorScheme
 from pygerber.gerberx3.api._layers import (
       Rasterized2DLayer,
       Rasterized2DLayerParams,
+      Rasterized2DBackend,
 )
 from pygerber.common.rgba import RGBA
 
@@ -36,15 +39,16 @@ class gerbLoader():
 
         out =  Rasterized2DLayer(
             options=Rasterized2DLayerParams(
+                    dpi=300,
                     source_path=file_path,
                     colors=cunning_scheme,
             ),
         )
-        #out.render().save("./tmp.png")
-        #layerImage = Image.open(r'./tmp.png')
-        out_handle =  Rasterized2DResult(out.render())
-        layerImage = out_handle.get_result_handle().result
-        layerImage.convert("RGBA")
+        out.render().save("./tmp.png")
+        layerImage = Image.open('./tmp.png')
+        #out_handle =  Rasterized2DResult(out.render())
+        #layerImage = out_handle.get_result_handle().result
+        #layerImage.convert("RGBA")
         return layerImage, rgb
 
 #from . import simple_color_generator

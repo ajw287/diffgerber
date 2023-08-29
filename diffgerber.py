@@ -57,17 +57,21 @@ def black_or_b(a, b, opacity=0.85):
     new.paste(shade, mask=mask)
     # To have the original image show partially
     # on the final result, simply put "diff" instead of thresholded_diff bellow
+    # was : new.paste(b, mask=thresholded_diff)
     new.paste(b, mask=thresholded_diff)
     shrink = new.filter(ImageFilter.MaxFilter(3))
     grow = shrink.filter(ImageFilter.MinFilter(17))
     
     #outline  = grow.copy()
-    outline = ImageChops.difference(grow, new)
+    outline = ImageChops.difference(new, grow)
     #outline2 = outline.filter(ImageFilter.MinFilter(5))
     #outline.paste(shade, mask=mask)
     redmask = new_color(size, color=(130,  166,  175, 100))#"#C0A60")#(230,  66,  75))
-    redmask.paste(shade, mask=outline)
+    #redmask.show()
+    redmask.paste(shade, mask=grow)
+    #redmask.show()
     tellUser("displaying differences", label_msg=True, record_msg=False)
+    #redmask.show()
     return redmask
 
 
@@ -279,7 +283,7 @@ def button6_diff_clicked():
     if active_left_index is None:
         tellUser("Active layer unpaired - nothing to highlight")
         return
-    diff_image = black_or_b(active_layer_image_left, active_layer_image_right, opacity=0.85)
+    diff_image = black_or_b(active_layer_image_left, active_layer_image_right, opacity=0.55)
     show_image (diff_image, "diff_"+str(active_left_index))
 
 def import_option_selected(event):

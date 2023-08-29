@@ -44,14 +44,14 @@ class dirSelectDialog():
         #filetypes = [("PNG files", "*.png"), ("GerberX2 files", (".gbr", ".grb")), ("All known gerbers", self.gerber_filetypes), ("Python files", "*.py"), ("All files", "*.*")]
         self.dialog = tk.Toplevel(self.root)
         self.dialogFlag = True
-        self.dialog.title("File Dialog")
+        self.dialog.title("Select example Gerber file or directory to compare")
         self.dialog.geometry('600x350')
         
         #SOLUTION from: https://stackoverflow.com/questions/26957845/ttk-treeview-cant-change-row-height
         style = ttk.Style(self.dialog)
         style.configure('gerberFileDialog.Treeview', rowheight=25)  
         treeview = ttk.Treeview(self.dialog, columns=("name", "type"), show="headings", style='gerberFileDialog.Treeview')
-        treeview.heading("name", text="Name")
+        treeview.heading("name", text="Filename")
         treeview.heading("type", text="Type")
 
         def select_item():
@@ -72,7 +72,7 @@ class dirSelectDialog():
             treeview.delete(*treeview.get_children())
 
             # Insert parent directory button
-            treeview.insert("", tk.END, values=("..", "directory"), text=os.path.dirname(path))
+            treeview.insert("", tk.END, values=("..", "directory above"), text=os.path.dirname(path))
             self.nav_path = path #os.path.dirname(path)
             for item in os.scandir(path):
                 if item.is_file() and item.name.lower().endswith(self.file_filter[self.filter_var.get()]):
@@ -90,7 +90,7 @@ class dirSelectDialog():
             selected_item = treeview.focus()
             if selected_item:
                 item_type = treeview.item(selected_item, "values")[1]
-                if item_type == "directory":
+                if item_type == "directory" or item_type == "directory above":
                     path = treeview.item(selected_item, "text")
                     populate_treeview(path)
 
@@ -125,7 +125,8 @@ def checkDialog(root, dialog):
         print("dialog exists")
         print(dialog.dialog)
     else:
-        print("dialog doesn't exist")
+        print("dialog doesn't exist.. time to do a thing with the dir: ")
+        print(dialog.selected_directory)
         print(dialog)
     root.after(2000, checkDialog, root, dialog)
 
