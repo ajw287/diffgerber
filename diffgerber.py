@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import PhotoImage
+from tkinter import messagebox
 from PIL import Image, ImageTk, ImageChops, ImageDraw, ImageFilter
 import difflib as dl
 #import color_generator as cg
@@ -266,19 +267,26 @@ def button2_reload_clicked():
         directory_selected(right_frame, right_directory_entry, right_directory_entry.get())
 
 def button3_export_clicked():
-
-    print("Button 3 clicked - export an image \n\n *** NOT IMPLEMENTED ***\n\n")
-    f = filedialog.asksaveasfile(parent=window, title="Save postscript", mode='w', defaultextension=".ps")
-    if f is None:
-        return
-    print (f.name)
-    canvas.postscript(file=f.name, colormode='color')
+    #print("Button 3 clicked - export an image \n\n *** NOT IMPLEMENTED ***\n\n")
+    tellUser("export is experimental - consider using screen capture!")
+    items = canvas.find_all()
+    proceed_anyway = False
+    if len(items) == 0:
+         proceed_anyway = messagebox.askyesno("No data to export!", "The file will be blank - Are you sure you want to proceed?")
+    if len(items) != 0 or proceed_anyway == True:
+        f = filedialog.asksaveasfile(parent=window, title="Save postscript", mode='w', defaultextension=".ps")
+        if f is None:
+            return
+        #print (f.name)
+        canvas.postscript(file=f.name, colormode='color')
 
 def button4_zoomin_clicked():
     print("Button 4 clicked zoom +\n\n *** NOT IMPLEMENTED ***\n\n")
+    tellUser("zoom not implemented")
 
 def button5_zoomout_clicked():
     print("Button 5 clicked zoom -\n\n *** NOT IMPLEMENTED ***\n\n")
+    tellUser("zoom not implemented")
 
 def button6_diff_clicked():
     if active_left_index is None:
