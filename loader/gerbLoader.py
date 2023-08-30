@@ -32,17 +32,17 @@ class gerbLoader():
             if color == None:
                 color = self.color.getNextColor()
             c, rgb = color
-            cunning_scheme = ColorScheme(
+            cunning_scheme = ColorScheme( # simple transparent of fill color scheme
                                 background_color=RGBA.from_rgba(0, 0, 0, 0),
-                                clear_color=RGBA.from_rgba(60, 181, 60, 255),
+                                clear_color=RGBA.from_rgba(0, 0, 0, 0),
                                 solid_color=RGBA.from_rgba(*c[0]),
-                                clear_region_color=RGBA.from_rgba(60, 181, 60, 255),
+                                clear_region_color=RGBA.from_rgba(0, 0, 0, 0),
                                 solid_region_color=RGBA.from_rgba(*c[0]),
                                 )
 
             out =  Rasterized2DLayer(
                 options=Rasterized2DLayerParams(
-                        dpi=300,
+                        dpi=450,
                         source_path=file_path,
                         colors=cunning_scheme,
                 ),
@@ -57,11 +57,11 @@ class gerbLoader():
             coords = render_result._properties.gerber_coordinate_origin
             print("gerber offset")
             print(coords)
-            
-            self.imageDict [file_path] = (layerImage, rgb)
+            verticalFlip = layerImage.transpose(Image.FLIP_TOP_BOTTOM)
+            self.imageDict [file_path] = (verticalFlip, rgb)
             #layerImage = out_handle.get_result_handle().result
             #layerImage.convert("RGBA")
-            return layerImage, rgb
+            return verticalFlip, rgb
         else:
             return self.imageDict[file_path]
 

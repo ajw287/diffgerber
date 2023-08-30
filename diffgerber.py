@@ -4,7 +4,7 @@ from tkinter import ttk
 from tkinter import filedialog
 from tkinter import PhotoImage
 from tkinter import messagebox
-from PIL import Image, ImageTk, ImageChops, ImageDraw, ImageFilter
+from PIL import Image, ImageTk, ImageChops, ImageDraw, ImageFilter, ImageOps
 import difflib as dl
 #import color_generator as cg
 import loader
@@ -35,45 +35,92 @@ def new_gray(size, color):
     return img
 
 def new_color(size, color):
-    img = Image.new(mode="RGBA", size=size)
-    dr = ImageDraw.Draw(img)
-    dr.rectangle((0,0) + size, fill=color)
+    img = Image.new(mode="RGBA", size=size, color=color)
+    #dr = ImageDraw.Draw(img)
+    #dr.rectangle((0,0) + size, fill=color)
     return img
 
-def black_or_b(a, b, opacity=0.85):
+def get_difference_outlines(a, b, opacity=0.85):
+    """ Function to find differences in images
+
+        Returns
+        -------
+        redmask : Image
+            A semi transparent image with the differences of a & b highlighted with a thick red highlight outline
+        """
     tellUser("checking for differences... hang on!", label_msg=True, record_msg=False)
-    diff = ImageChops.difference(a, b)
+    #convert the images to black and white - first
+    a_gray = ImageOps.grayscale(a)
+    b_gray = ImageOps.grayscale(b)
+    #b_gray.show()
+    #input()
+
+    # threshold the images - since they are different colors - (anything above '1' becomes white)
+    a_mask = a_gray.point(lambda x: 255 if x > 1 else 0, '1')
+    b_mask = b_gray.point(lambda x: 255 if x > 1 else 0, '1')
+    #b_mask.show()
+    #input()
+
+
+    a_inv = ImageOps.invert(a_mask)
+    b_inv = ImageOps.invert(b_mask)
+    #b_inv.show()
+    #input()
+
+    a_bw = a_inv.convert("1")
+    b_bw = b_inv.convert("1")
+    #b_bw.show()
+    #input()
+    diff = ImageChops.difference(a_bw, b_bw)
     diff = diff.convert('L')
-    # Hack: there is no threshold in PILL,
-    # so we add the difference with itself to do
-    # a poor man's thresholding of the mask: 
-    #(the values for equal pixels-  0 - don't add up)
-    thresholded_diff = diff
-    for repeat in range(3):
-        thresholded_diff  = ImageChops.add(thresholded_diff, thresholded_diff)
-    h,w = size = diff.size
-    mask = new_gray(size, int(255 * (opacity)))
-    shade = new_gray(size, 0)
-    new = a.copy()
-    new.paste(shade, mask=mask)
-    # To have the original image show partially
-    # on the final result, simply put "diff" instead of thresholded_diff bellow
-    # was : new.paste(b, mask=thresholded_diff)
-    new.paste(b, mask=thresholded_diff)
-    shrink = new.filter(ImageFilter.MaxFilter(3))
-    grow = shrink.filter(ImageFilter.MinFilter(17))
-    
-    #outline  = grow.copy()
-    outline = ImageChops.difference(new, grow)
-    #outline2 = outline.filter(ImageFilter.MinFilter(5))
-    #outline.paste(shade, mask=mask)
-    redmask = new_color(size, color=(130,  166,  175, 100))#"#C0A60")#(230,  66,  75))
+    #diff.show()
+    #input()
+
+    new = diff.copy()
+    shrink = new.filter(ImageFilter.MaxFilter(17))
+    grow = shrink.filter(ImageFilter.MinFilter(3))
+    inverted = ImageOps.invert(new)
+    outline = ImageChops.difference(grow, inverted)
+    outline = ImageOps.invert(outline)
+    #outline.show()
+    highlight_color = (247,  126,  185, 220)
+    redmask = new_color(diff.size, color=(247,  126,  185, 0))  # same color but transparent - 
     #redmask.show()
-    redmask.paste(shade, mask=grow)
+    redmask.paste(highlight_color, (0,0), mask=outline)
     #redmask.show()
+    #input()
     tellUser("displaying differences", label_msg=True, record_msg=False)
-    #redmask.show()
     return redmask
+#    # Hack: there is no threshold in PILL,
+#    # so we add the difference with itself to do
+#    # a poor man's thresholding of the mask: 
+#    #(the values for equal pixels-  0 - don't add up)
+#    thresholded_diff = diff
+#    for repeat in range(3):
+#        thresholded_diff  = ImageChops.add(thresholded_diff, thresholded_diff)
+#    h,w = size = diff.size
+#    mask = new_gray(size, int(255 * (opacity)))
+#    shade = new_gray(size, 0)
+#    new = a.copy()
+#    new.paste(shade, mask=mask)
+#    # To have the original image show partially
+#    # on the final result, simply put "diff" instead of thresholded_diff bellow
+#    # was : new.paste(b, mask=thresholded_diff)
+#    new.paste(b, mask=thresholded_diff)
+#    shrink = new.filter(ImageFilter.MaxFilter(3))
+#    grow = shrink.filter(ImageFilter.MinFilter(17))
+#    
+#    #outline  = grow.copy()
+#    outline = ImageChops.difference(new, grow)
+#    #outline2 = outline.filter(ImageFilter.MinFilter(5))
+#    #outline.paste(shade, mask=mask)
+#    redmask = new_color(size, color=(130,  166,  175, 100))#"#C0A60")#(230,  66,  75))
+#    #redmask.show()
+#    redmask.paste(shade, mask=grow)
+#    #redmask.show()
+#    tellUser("displaying differences", label_msg=True, record_msg=False)
+#    #redmask.show()
+#    return redmask
 
 
 def update_file_pairs():
@@ -292,7 +339,7 @@ def button6_diff_clicked():
     if active_left_index is None:
         tellUser("Active layer unpaired - nothing to highlight")
         return
-    diff_image = black_or_b(active_layer_image_left, active_layer_image_right, opacity=0.55)
+    diff_image = get_difference_outlines(active_layer_image_left, active_layer_image_right, opacity=0.55)
     show_image (diff_image, "diff_"+str(active_left_index))
 
 def import_option_selected(event):
