@@ -49,7 +49,15 @@ class gerbLoader():
             )
             #out.render().save("./tmp.png")
             #layerImage = Image.open('./tmp.png')
-            layerImage =  out.render()._result_handle.result
+            render_result = out.render()
+            layerImage =  render_result._result_handle.result
+            coords = render_result._properties.target_coordinate_origin
+            print("target offset")
+            print(coords)
+            coords = render_result._properties.gerber_coordinate_origin
+            print("gerber offset")
+            print(coords)
+            
             self.imageDict [file_path] = (layerImage, rgb)
             #layerImage = out_handle.get_result_handle().result
             #layerImage.convert("RGBA")
