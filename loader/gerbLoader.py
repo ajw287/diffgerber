@@ -59,13 +59,16 @@ class gerbLoader():
             verticalFlip = layerImage.transpose(Image.FLIP_TOP_BOTTOM)
                         #layerImage = out_handle.get_result_handle().result
             #layerImage.convert("RGBA")
-            offset_x = coords.x.value * dpi + 25 # convert coords to offsets
-            offset_y = coords.y.value * dpi + 25
-            print("Absolute offsets x, y:")
-            print(offset_x)
-            print(offset_y)
-            self.imageDict [file_path] = (verticalFlip, rgb, offset_x, offset_y)
-            return verticalFlip, rgb, offset_x, offset_y 
+            offset_x = coords.x.value #* dpi   # convert coords to offsets
+            offset_y = coords.y.value #* dpi  
+            #if offset_x < 0 : 
+            #    offset_x =0
+            #if offset_y < 0:
+            #    offset_y = 0
+            width, height = verticalFlip.size
+            vFlipCrop = verticalFlip.crop((offset_x, offset_y, width, height))
+            self.imageDict [file_path] = (vFlipCrop, rgb, offset_x, offset_y)
+            return vFlipCrop, rgb, offset_x, offset_y 
         else:
             return self.imageDict[file_path]
 
