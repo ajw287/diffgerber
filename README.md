@@ -1,10 +1,12 @@
 # diffgerber
 
 <p align="center">
-   <img src="./docs/images/diffgerber-logo.png" alt="diffgerber logo" width="400">
+   <img src="./docs/images/diffgerber-logo.png" alt="diffgerber logo" width="300" title="the diffgerber logo">
 </p>
 
 Graphical tool to help users compare gerber files, the output from EDA tools (PCB CAD software) such as KiCAD using pygerber 2.0.0.
+
+![Picture of the Gerber Difftool](docs/images/GerberDifferenceViewer.png?raw=true "a diffgerber screenshot")
 
 # Setup
 
@@ -40,8 +42,6 @@ This project depends on python3, pillow, tkinter, difflib & pygerber.  The follo
 This is a basic tool to highlight differences in gerber files so that they can be compared.  At this time two directories of gerber files can be opened, layers are matched based on filename and checked for similarity.  If they are identical no differences will be expected, if there is more than 25% similarity, then a graphical "diff" is attempted.
 
 Aug-23:  Started on a V2.0 with only pygerber backend.  The original 3 backends (pygerber, pcb-tools, gerbv) each had problems/eccentricities and limitations, by limiting myself to one backend more progress will be seen.
-
-![Picture of the Gerber Difftool](docs/images/GerberDifferenceViewer.png?raw=true "diffgerber")
 
 1. Click "Browse" on the left-hand column, navigate to "./example/1/" click "OK".  You should see two layers of gerbers
 
