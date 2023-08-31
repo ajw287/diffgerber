@@ -413,8 +413,8 @@ button6.pack(side="left", padx=5, pady=5)
 
 # toolbar for choosing the importer code
 # List of options for the drop-down menu
-backend_label = tk.Label(toolbar_frame, text="backend:")
-backend_label.pack(side=tk.LEFT, padx = 5, pady = 10)
+#backend_label = tk.Label(toolbar_frame, text="backend:")
+#backend_label.pack(side=tk.LEFT, padx = 5, pady = 10)
 
 import_options = ["Import using pygerber", "Import using pcb-tools", "Import using gerbv"]
 # Variable to store the selected import option
@@ -422,7 +422,8 @@ import_option = tk.StringVar()
 import_option.set(import_options[0])
 # Create the drop-down menu
 option_dropdown = ttk.Combobox(toolbar_frame, textvariable=import_option, values=import_options, state="readonly")
-option_dropdown.pack(side=tk.LEFT, padx=1, pady=5)
+#option_dropdown.pack(side=tk.LEFT, padx=1, pady=5)
+
 # Bind the event when the selection is changed
 option_dropdown.bind("<<ComboboxSelected>>", import_option_selected)
 selected_option = import_option.get()

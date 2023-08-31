@@ -28,6 +28,7 @@ class gerbLoader():
         pass
     
     def loadImage(self, file_path, color=None):
+        dpi = 500
         if file_path not in self.imageDict : 
             if color == None:
                 color = self.color.getNextColor()
@@ -42,7 +43,7 @@ class gerbLoader():
 
             out =  Rasterized2DLayer(
                 options=Rasterized2DLayerParams(
-                        dpi=450,
+                        dpi=dpi,
                         source_path=file_path,
                         colors=cunning_scheme,
                 ),
