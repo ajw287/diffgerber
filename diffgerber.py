@@ -16,11 +16,15 @@ imageDict = {}
 directories  = ["", ""] # {left_frame: "", right_frame: ""}
 left_file_list  = []
 right_file_list = []
+photo_list = []
 left_to_right_dict = {}
 active_left_index = None
 active_layer_image_left = None
 active_layer_image_right = None
 file_loader = loader.gerbLoader()
+active_offset_x = 0.0
+active_offset_y = 0.0
+
 
 point_table = ([0] + ([255] * 255))
 # diff code using only pillow
@@ -138,7 +142,7 @@ def update_file_pairs():
         tellUser("no files in right list", label_msg=False)
 
 def get_layer_similarity(left_index):
-    global left_file_list, right_file_list, left_to_right_dict, directories, active_layer_image_left, active_layer_image_right
+    global left_file_list, right_file_list, left_to_right_dict, directories, active_layer_image_left, active_layer_image_right, active_offset_x, active_offset_y
     left_file_path = os.path.join(directories[0], left_file_list[left_index])
     print(left_file_path)
     with open(left_file_path, "r") as left_file:
@@ -153,6 +157,8 @@ def get_layer_similarity(left_index):
                 c = file_loader.color.getWhite()
                 active_layer_image_left,  lw, lx, ly =  file_loader.loadImage(left_file_path, color=c ) 
                 active_layer_image_right, rw, lx, ly = file_loader.loadImage(right_file_path, color=c )
+                active_offset_x = lx
+                active_offset_y = ly
             else:
                 tellUser("files: "+str(left_file_list[left_index])+" have same name but differ greatly")         
 
@@ -186,7 +192,7 @@ def show_image(full_filename):
     Shows the image in the imageDict, from the full_filename key
     note if full_filename is not in dict this is an error for now.. could catch but shouldn't happen!
     '''
-    global imageDict
+    global imageDict, middle_frame, canvas
     #if not True:
     #    hide_image(filename)
     #    return 
@@ -215,8 +221,8 @@ def show_image(full_filename):
     #print(full_filename)
     #print(photo)
     canvas.create_image(x, y, anchor="nw", image=photo)
-    canvas.image = photo  # Store a reference to prevent garbage collection
-    
+    #canvas.image = photo  # Store a reference to prevent garbage collection
+    photo_list.append(photo)
     
 def layer_selected(full_filename, index):
     global active_left_index, imageDict
@@ -320,6 +326,7 @@ def button1_clear_clicked(clear_dirs=True):
             checkbox.destroy()
         frame_checkboxes[frame].clear()
     canvas.delete("all")
+
     imageDict = {}
     directories = ["", ""]
     right_file_list = []
@@ -361,16 +368,16 @@ def button5_zoomout_clicked():
     tellUser("zoom not implemented")
 
 def button6_diff_clicked():
-    global imageDict
+    global imageDict, active_layer_image_left, active_layer_image_right, active_offset_x, active_offset_y
     if active_left_index is None:
         tellUser("Active layer unpaired - nothing to highlight")
         return
     diff_image = get_difference_outlines(active_layer_image_left, active_layer_image_right, opacity=0.55)
     photo = ImageTk.PhotoImage(diff_image)
-    x_offset = 0.0
-    y_offset = 0.0
     rgb = '#%02x%02x%02x%02x' % (247,  126,  185, 220) 
-    imageDict["diff_"+str(active_left_index)] = (diff_image, rgb, x_offset, y_offset)
+
+    print(active_offset_x)
+    imageDict["diff_"+str(active_left_index)] = (diff_image, rgb, active_offset_x, active_offset_y)
     show_image("diff_"+str(active_left_index))
 
 def import_option_selected(event):
@@ -508,6 +515,14 @@ right_directory_button.pack(anchor=tk.NW)
 #canvas = tk.Canvas(middle_frame, width=400, height=400)
 canvas = tk.Canvas(middle_frame, width=400, height=400, bg="grey")
 canvas.pack(fill=tk.BOTH, expand=True)
+
+# Create a background rectangle with a solid color (e.g., white)
+#background_color = "#ffffff"  # White color
+#canvas.create_rectangle(0, 0, 800, 600, fill=background_color, outline=background_color)
+
+#image1 = Image.open("icon.png")
+#photo1 = ImageTk.PhotoImage(image1)
+#canvas.create_image(100, 100, image=photo1, anchor=tk.NW)
 
 # Create vertical and horizontal scrollbars for the image frame
 vscrollbar = tk.Scrollbar(canvas, orient=tk.VERTICAL, command=canvas.yview)

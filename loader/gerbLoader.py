@@ -59,8 +59,8 @@ class gerbLoader():
             verticalFlip = layerImage.transpose(Image.FLIP_TOP_BOTTOM)
                         #layerImage = out_handle.get_result_handle().result
             #layerImage.convert("RGBA")
-            offset_x = coords.x.value * dpi * -1 # convert coords to offsets
-            offset_y = coords.y.value * dpi * -1
+            offset_x = coords.x.value * dpi + 25 # convert coords to offsets
+            offset_y = coords.y.value * dpi + 25
             print("Absolute offsets x, y:")
             print(offset_x)
             print(offset_y)
