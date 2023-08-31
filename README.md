@@ -41,7 +41,7 @@ This project depends on python3, pillow, tkinter, difflib & pygerber.  The follo
 # Using diffgerber
 This is a basic tool to highlight differences in gerber files so that they can be compared.  At this time two directories of gerber files can be opened, layers are matched based on filename and checked for similarity.  If they are identical no differences will be expected, if there is more than 25% similarity, then a graphical "diff" is attempted.
 
-Aug-23:  Started on a V2.0 with only pygerber backend.  The original 3 backends (pygerber, pcb-tools, gerbv) each had problems/eccentricities and limitations, by limiting myself to one backend more progress will be seen.
+Aug-23:  Started on a V2.0 with only pygerber backend.  The original 3 backends (pygerber 1.0, pcb-tools, gerbv) each had eccentricities and limitations, this meant developing and testing for each one and limited features.
 
 1. Click "Browse" on the left-hand column, navigate to "./example/1/" click "OK".  You should see two layers of gerbers
 

@@ -28,7 +28,7 @@ class gerbLoader():
         pass
     
     def loadImage(self, file_path, color=None):
-        dpi = 500
+        dpi = 1200
         if file_path not in self.imageDict : 
             if color == None:
                 color = self.color.getNextColor()
