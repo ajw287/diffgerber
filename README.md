@@ -4,7 +4,7 @@
    <img src="./docs/images/diffgerber-logo.png" alt="diffgerber logo" width="400">
 </p>
 
-Graphical tool to help users compare gerber files, the output from PCB CAD software using pygerber 2.0.0.
+Graphical tool to help users compare gerber files, the output from EDA tools (PCB CAD software) such as KiCAD using pygerber 2.0.0.
 
 # Setup
 
