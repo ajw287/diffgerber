@@ -28,7 +28,7 @@ class gerbLoader():
         pass
     
     def loadImage(self, file_path, color=None):
-        dpi = 1200
+        dpi = 400
         if file_path not in self.imageDict : 
             if color == None:
                 color = self.color.getNextColor()
@@ -53,16 +53,19 @@ class gerbLoader():
             render_result = out.render()
             layerImage =  render_result._result_handle.result
             coords = render_result._properties.target_coordinate_origin
-            print("target offset")
-            print(coords)
-            coords = render_result._properties.gerber_coordinate_origin
-            print("gerber offset")
-            print(coords)
+            #coords = render_result._properties.gerber_coordinate_origin
+            #print("gerber offset")
+            #print(coords)
             verticalFlip = layerImage.transpose(Image.FLIP_TOP_BOTTOM)
-            self.imageDict [file_path] = (verticalFlip, rgb)
-            #layerImage = out_handle.get_result_handle().result
+                        #layerImage = out_handle.get_result_handle().result
             #layerImage.convert("RGBA")
-            return verticalFlip, rgb
+            offset_x = coords.x.value * dpi * -1 # convert coords to offsets
+            offset_y = coords.y.value * dpi * -1
+            print("Absolute offsets x, y:")
+            print(offset_x)
+            print(offset_y)
+            self.imageDict [file_path] = (verticalFlip, rgb, offset_x, offset_y)
+            return verticalFlip, rgb, offset_x, offset_y 
         else:
             return self.imageDict[file_path]
 

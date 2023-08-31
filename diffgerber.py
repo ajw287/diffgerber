@@ -12,7 +12,6 @@ import loader
 #from pygerber.types import ColorSet
 #from pygerber.parser.pillow.parser import ColorSet
 
-photos  = []
 imageDict = {}
 directories  = ["", ""] # {left_frame: "", right_frame: ""}
 left_file_list  = []
@@ -152,17 +151,19 @@ def get_layer_similarity(left_index):
             elif similarity.ratio() >= .2:
                 tellUser("file: "+str(left_file_list[left_index])+" is "+str(similarity.ratio() * 100.0)+"% similar")
                 c = file_loader.color.getWhite()
-                active_layer_image_left, lw =  file_loader.loadImage(left_file_path, color=c ) 
-                active_layer_image_right, rw = file_loader.loadImage(right_file_path, color=c )
+                active_layer_image_left,  lw, lx, ly =  file_loader.loadImage(left_file_path, color=c ) 
+                active_layer_image_right, rw, lx, ly = file_loader.loadImage(right_file_path, color=c )
             else:
                 tellUser("files: "+str(left_file_list[left_index])+" have same name but differ greatly")         
 
 def load_images(directory):
-    global photos
+    global imageDict
     """Load image files from the selected directory."""
     images = []
     filenames = []
     layer_colors = []
+    xs = []
+    ys = []
     for i, filename in enumerate(os.listdir(os.fsencode(directory))):
         if filename.decode().endswith((".jpg", ".png")):
             filepath = os.path.join(directory, filename.decode())
@@ -171,40 +172,63 @@ def load_images(directory):
             filenames.append(filename.decode())
         elif filename.decode().endswith((".gbr", ".grb")):
             filepath = os.path.join(directory, filename.decode())
-            image, rgb = file_loader.loadImage(filepath)
+            image, rgb, x, y = file_loader.loadImage(filepath)
+            imageDict[filepath] = (image, rgb, x, y)
+            xs.append(x)
+            ys.append(y)
             images.append(image)
             filenames.append(filename.decode())
             layer_colors.append(rgb)
-    return images, filenames, layer_colors
+    return images, filenames, layer_colors, xs, ys
 
-def show_image(image, full_filename):
+def show_image(full_filename):
+    '''
+    Shows the image in the imageDict, from the full_filename key
+    note if full_filename is not in dict this is an error for now.. could catch but shouldn't happen!
+    '''
     global imageDict
     #if not True:
-    #    hide_image(image,filename)
+    #    hide_image(filename)
     #    return 
-
     """Display the selected image on the canvas."""
     #img_width, img_height = image.size
-    photo = imageDict.get(full_filename)
-    if photo is None:
+    x = 0.0
+    y = 0.0
+    photo = None
+    if imageDict:
+        image, rgb, offset_x_from_dict, offset_y_from_dict = imageDict.get(full_filename)
         photo = ImageTk.PhotoImage(image)
-        imageDict.update({full_filename: photo})
-    canvas.create_image(0, 0, anchor="nw", image=photo)
+        #print("loaded from imageDict")
+        #print(imageDict)
+    if photo is None:
+        image, rgb, x_off, y_off = file_loader.loadImage(full_filename)
+        photo = ImageTk.PhotoImage(image)
+        imageDict.update({full_filename: (image, rgb, x_off, y_off)})
+        x = x_off
+        y = y_off
+        print ("got an empty entry in the dictionary: - this shouldn't happen!")
+        pritn(full_filename)
+        exit()
+    else:
+        x = offset_x_from_dict
+        y = offset_y_from_dict
+    #print(full_filename)
+    #print(photo)
+    canvas.create_image(x, y, anchor="nw", image=photo)
     canvas.image = photo  # Store a reference to prevent garbage collection
-    #photos.append(photo) # add images to list to stop garbage collection
     
     
-def layer_selected(image, full_filename, index):
-    global active_left_index
+def layer_selected(full_filename, index):
+    global active_left_index, imageDict
     #TODO: this is a hacky way of finding the left-to-right lookup - is there a better way?
-    
+    image, rgb, x, y  = imageDict[full_filename]
     # extract directory from full_filename -
     dirname = os.path.dirname(full_filename)
     active_left_index = None
-    print("layer selected")
-    print(directories)
-    print(dirname)
-    print("---")
+    #print("layer selected")
+    #print(directories)
+    #print(dirname)
+    #print("---")
     if dirname == directories[0]: #LHS selected
         if index in left_to_right_dict:
             get_layer_similarity(index)
@@ -217,11 +241,11 @@ def layer_selected(image, full_filename, index):
     if active_left_index:
         #there is an active pair for this layer...
         print("active layer selected")
-    show_image(image, full_filename)
+    show_image(full_filename)
     #set the matched layer to selected bg = "grey"
-    print(full_filename)
+    #print(full_filename)
     
-def hide_image(image, full_filename):
+def hide_image(full_filename):
     print("remove the image from the photos")
 
 def directory_select_btn(frame, directory_entry):
@@ -236,7 +260,7 @@ def directory_selected(frame, directory_entry, selected_directory):
     global left_file_list, right_file_list, directories, frame_images, frame_checkboxes, frame_selected_layer_vars
     directory_entry.delete(0, tk.END)
     directory_entry.insert(tk.END, selected_directory)
-    images, filenames, layer_colors = load_images(selected_directory)
+    images, filenames, layer_colors, x_offs, y_offs = load_images(selected_directory)
     tellUser("loaded: "+selected_directory)
     frame_images.update({frame: images})
 
@@ -261,7 +285,8 @@ def directory_selected(frame, directory_entry, selected_directory):
             offvalue=-1,
             selectcolor= layer_colors[i],
             #command=lambda i=i: layer_selected(frame_images[frame][i], os.path.join(selected_directory, filenames[i]), i) if frame_selected_layer_vars[frame][i].get() == i else None
-            command=lambda i=i: layer_selected( frame_images[frame][i], os.path.join(selected_directory, filenames[i]), i)
+            #command=lambda i=i: layer_selected( frame_images[frame][i], os.path.join(selected_directory, filenames[i]), i)
+            command=lambda i=i: layer_selected( os.path.join(selected_directory, filenames[i]), i)
             #command=lambda checked, img=images[i], flnm=filenames[i]: show_image(checked, img, flnm)
         )
         checkbox.pack(anchor="w")
@@ -281,13 +306,13 @@ def directory_selected(frame, directory_entry, selected_directory):
     #selected_images_var.set(-1)
     # TODO: make this the check for differences and display them
     if images:
-        show_image( images[0], os.path.join(selected_directory, filenames[0]))
+        show_image(os.path.join(selected_directory, filenames[0]))
 
 #def toolbar_button_clicked():
 #    """Handle the event when the toolbar button is clicked."""
 #    print("Toolbar button clicked!")
 def button1_clear_clicked(clear_dirs=True):
-    global imageDict, photos, left_directory , right_directory, left_file_list , right_file_list, left_to_right_dict
+    global imageDict, left_directory , right_directory, left_file_list , right_file_list, left_to_right_dict, canvas
     #print("Button 1 clicked")
     # Clear the checkboxes
     for frame in frame_checkboxes:
@@ -296,7 +321,6 @@ def button1_clear_clicked(clear_dirs=True):
         frame_checkboxes[frame].clear()
     canvas.delete("all")
     imageDict = {}
-    photos  = []
     directories = ["", ""]
     right_file_list = []
     left_to_right_dict = {}
@@ -315,6 +339,7 @@ def button2_reload_clicked():
 
 def button3_export_clicked():
     #print("Button 3 clicked - export an image \n\n *** NOT IMPLEMENTED ***\n\n")
+    global canvas
     tellUser("export is experimental - consider using screen capture!")
     items = canvas.find_all()
     proceed_anyway = False
@@ -336,11 +361,17 @@ def button5_zoomout_clicked():
     tellUser("zoom not implemented")
 
 def button6_diff_clicked():
+    global imageDict
     if active_left_index is None:
         tellUser("Active layer unpaired - nothing to highlight")
         return
     diff_image = get_difference_outlines(active_layer_image_left, active_layer_image_right, opacity=0.55)
-    show_image (diff_image, "diff_"+str(active_left_index))
+    photo = ImageTk.PhotoImage(diff_image)
+    x_offset = 0.0
+    y_offset = 0.0
+    rgb = '#%02x%02x%02x%02x' % (247,  126,  185, 220) 
+    imageDict["diff_"+str(active_left_index)] = (diff_image, rgb, x_offset, y_offset)
+    show_image("diff_"+str(active_left_index))
 
 def import_option_selected(event):
     global file_loader
