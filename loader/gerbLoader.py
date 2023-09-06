@@ -25,10 +25,10 @@ class gerbLoader():
         self.color = simple_color_generator.simple_color_generator()
         #print ("initialised gerbLoader")
         self.imageDict = {}
+        self.dpi = 400
         pass
     
     def loadImage(self, file_path, color=None):
-        dpi = 400
         if file_path not in self.imageDict : 
             if color == None:
                 color = self.color.getNextColor()
@@ -43,7 +43,7 @@ class gerbLoader():
 
             out =  Rasterized2DLayer(
                 options=Rasterized2DLayerParams(
-                        dpi=dpi,
+                        dpi=self.dpi,
                         source_path=file_path,
                         colors=cunning_scheme,
                 ),
@@ -59,8 +59,8 @@ class gerbLoader():
             verticalFlip = layerImage.transpose(Image.FLIP_TOP_BOTTOM)
                         #layerImage = out_handle.get_result_handle().result
             #layerImage.convert("RGBA")
-            offset_x = coords.x.value #* dpi   # convert coords to offsets
-            offset_y = coords.y.value #* dpi  
+            offset_x = coords.x.value   # convert coords to offsets
+            offset_y = coords.y.value  
             #if offset_x < 0 : 
             #    offset_x =0
             #if offset_y < 0:

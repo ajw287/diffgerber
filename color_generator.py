@@ -1,4 +1,8 @@
 from pygerber.parser.pillow.parser import ColorSet
+import random
+import secrets
+from datetime import datetime
+random.seed(datetime.now().timestamp())
 
 class color_generator():
 #    LARGE_PRIME= [ 39847,  69857,  40277]
@@ -11,7 +15,8 @@ class color_generator():
     WHITE = None
     
     def __init__(self):
-        for i in range(173,285): # range numbers need to be away from 1, but are not important
+        base = 173 + randint
+        for i in range(base,base+50): # range numbers need to be away from 1, but are not important
             self.LIST_OF_COLORS.append(ColorSet(
                              (( (i+23)*self.LARGE_PRIME[0])%150, ((i+253)*self.LARGE_PRIME[1])%255, ((i+3)*self.LARGE_PRIME[2])%255 , 160),
                              (100,100,100, 50),

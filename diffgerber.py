@@ -24,6 +24,7 @@ active_layer_image_right = None
 file_loader = loader.gerbLoader()
 active_offset_x = 0.0
 active_offset_y = 0.0
+percent_diff_pixels = 0
 
 
 point_table = ([0] + ([255] * 255))
@@ -51,6 +52,7 @@ def get_difference_outlines(a, b, opacity=0.85):
         redmask : Image
             A semi transparent image with the differences of a & b highlighted with a thick red highlight outline
         """
+    global percent_diff_pixels
     tellUser("checking for differences... hang on!", label_msg=True, record_msg=False)
     #convert the images to black and white - first
     a_gray = ImageOps.grayscale(a)
@@ -64,7 +66,7 @@ def get_difference_outlines(a, b, opacity=0.85):
     #b_mask.show()
     #input()
 
-
+    # invert both images 
     a_inv = ImageOps.invert(a_mask)
     b_inv = ImageOps.invert(b_mask)
     #b_inv.show()
@@ -75,6 +77,15 @@ def get_difference_outlines(a, b, opacity=0.85):
     #b_bw.show()
     #input()
     diff = ImageChops.difference(a_bw, b_bw)
+    
+    # telluser what the total different pixels are...
+    tot_different_pixels = 0
+    tot_pixels = diff.size[0] * diff.size[1]
+    for pixel in diff.getdata():
+        if pixel != 0:
+            tot_different_pixels += 1
+    percent_diff_pixels = (1- (tot_different_pixels/tot_pixels) ) * 100
+    tellUser("pixel difference : %.2f%% pixels are similar at %d dpi"%(percent_diff_pixels, file_loader.dpi), label_msg=False, record_msg=True)
     diff = diff.convert('L')
     #diff.show()
     #input()
@@ -151,10 +162,10 @@ def get_layer_similarity(left_index):
         with open(right_file_path, "r") as right_file:
             similarity = dl.SequenceMatcher(None, left_file.read(), right_file.read())
             if similarity.ratio() == 1.0:
-                tellUser("file: "+str(left_file_list[left_index])+" is identical")
+                tellUser("text difference: "+str(left_file_list[left_index])+" is identical")
             elif similarity.ratio() >= .2:
-                tellUser("file: "+str(left_file_list[left_index])+" is "+str(similarity.ratio() * 100.0)+"% similar")
-                c = file_loader.color.getWhite()
+                tellUser("text difference: "+str(left_file_list[left_index])+" is %.2f%% similar"%(similarity.ratio() * 100.0) )
+                c = file_loader.color.getWhite() # the files are already loaded, so they are in the dictionary in a suitable color
                 active_layer_image_left,  lw, lx, ly =  file_loader.loadImage(left_file_path, color=c ) 
                 active_layer_image_right, rw, lx, ly = file_loader.loadImage(right_file_path, color=c )
                 active_offset_x = lx
@@ -263,10 +274,11 @@ def directory_select_btn(frame, directory_entry):
         directory_selected(frame, directory_entry, selected_directory)
 
 def directory_selected(frame, directory_entry, selected_directory):
-    global left_file_list, right_file_list, directories, frame_images, frame_checkboxes, frame_selected_layer_vars
+    global left_file_list, right_file_list, directories, frame_images, frame_checkboxes, frame_selected_layer_vars, canvas
     directory_entry.delete(0, tk.END)
     directory_entry.insert(tk.END, selected_directory)
     images, filenames, layer_colors, x_offs, y_offs = load_images(selected_directory)
+
     tellUser("loaded: "+selected_directory)
     frame_images.update({frame: images})
 
@@ -313,6 +325,12 @@ def directory_selected(frame, directory_entry, selected_directory):
     # TODO: make this the check for differences and display them
     if images:
         show_image(os.path.join(selected_directory, filenames[0]))
+    # set the scroll bars to a specific point
+    canvas.update_idletasks() 
+    canvas.xview_moveto(0.6)  # Horizontal scrollbar to the middle
+    canvas.yview_moveto(0.7)  # Vertical scrollbar to the middle
+    canvas.update_idletasks() 
+    print(x_offs)
 
 #def toolbar_button_clicked():
 #    """Handle the event when the toolbar button is clicked."""
@@ -360,12 +378,19 @@ def button3_export_clicked():
         canvas.postscript(file=f.name, colormode='color')
 
 def button4_zoomin_clicked():
+    global canvas
     print("Button 4 clicked zoom +\n\n *** NOT IMPLEMENTED ***\n\n")
     tellUser("zoom not implemented")
+    canvas.scale("all", 0, 0, 1.1, 1.1)  # Increase scale factor
+
+
 
 def button5_zoomout_clicked():
+    global canvas
     print("Button 5 clicked zoom -\n\n *** NOT IMPLEMENTED ***\n\n")
     tellUser("zoom not implemented")
+    canvas.scale("all", 0, 0, 0.9, 0.9)  # Decrease scale factor
+
 
 def button6_diff_clicked():
     global imageDict, active_layer_image_left, active_layer_image_right, active_offset_x, active_offset_y
@@ -440,11 +465,11 @@ button2.pack(side="left", padx=5, pady=5)
 button3 = tk.Button(toolbar_frame, text="Export Image", command=button3_export_clicked)
 button3.pack(side="left", padx=5, pady=5)
 
-button4 = tk.Button(toolbar_frame, text="🔎zoom🔍☐", command=button4_zoomin_clicked)
+button4 = tk.Button(toolbar_frame, text="🔎zoom🔍☐+", command=button4_zoomin_clicked)
 button4.pack(side="left", padx=5, pady=5)
 
-#button5 = tk.Button(toolbar_frame, text="Zoom -", command=button5_zoomout_clicked)
-#button5.pack(side="left", padx=5, pady=5)
+button5 = tk.Button(toolbar_frame, text="Zoom-", command=button5_zoomout_clicked)
+button5.pack(side="left", padx=5, pady=5)
 
 button6 = tk.Button(toolbar_frame, text="Hightlight Differences", command=button6_diff_clicked)
 button6.pack(side="left", padx=5, pady=5)
@@ -513,7 +538,7 @@ right_directory_button.pack(anchor=tk.NW)
 # Middle column: Canvas to display the images with scrollbars
 # Create a canvas with scrollbars
 #canvas = tk.Canvas(middle_frame, width=400, height=400)
-canvas = tk.Canvas(middle_frame, width=400, height=400, bg="grey")
+canvas = tk.Canvas(middle_frame, width=1400, height=1400, bg="black")
 canvas.pack(fill=tk.BOTH, expand=True)
 
 # Create a background rectangle with a solid color (e.g., white)
