@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "diffgerber"
+version = "0.1.0"
+description = "a gerber diff program"
+authors = ["Andy Whyte <ajwhyte+github@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+pygerber = ">=2.0.1"
+pillow = "^10.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
