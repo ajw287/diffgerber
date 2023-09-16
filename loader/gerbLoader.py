@@ -1,4 +1,4 @@
-from PIL import Image, ImageFile
+from PIL import Image, ImageFile, ImageChops, ImageFilter, ImageOps # ImageDraw
 from . import simple_color_generator
 #from pygerber.backend.rasterized_2d import Rasterized2DBackend
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -72,153 +72,85 @@ class gerbLoader():
         else:
             return self.imageDict[file_path]
 
-#from . import simple_color_generator
-#from PIL import Image, ImageFile
-#ImageFile.LOAD_TRUNCATED_IMAGES = True
-#import pygerber as pyg
-#from pygerber import API2D
-##from pygerber.parser.pillow import ColorSet
-#import gerber
-##import gerber.render
-#from gerber.render.cairo_backend import GerberCairoContext
-##from gerber.render import GerberCairoContext
-#from gerber import pcb
-#from io import BytesIO
-#import subprocess
-#from typing import Tuple
-#
-#from pygerber.parser.pillow.parser import ColorSet
-#
-#class gerbLoader():
-#    """
-#    gerbLoader is an abstraction layer
-#    there are at least three ways to load a gerber file.  :(
-#    """
-#    option = None
-#    def __init__(self):
-#        #self.option = "Import using pcb-tools"
-#        self.color = simple_color_generator.simple_color_generator()
-#        #print ("initialised gerbLoader")
-#
-#    def get_image_from_gerbv(self, path, color):
-#        hex = color[1]
-#        try:
-#            result = subprocess.run([
-#                "gerbv",
-#                "--export=png",
-#                "-o",
-#                "./tmp.png",
-#                f"--background=#050515",
-#                f"--foreground={hex}",
-#                "--dpi=600",
-#                #"--window=5709x1576",
-#                f"{path}",
-#            ]
-#            , check=True)
-#            # Process completed successfully
-#            layerImage = Image.open(r'./tmp.png')
-#            layerImage.convert("RGBA")
-#            self.color_to_alpha(layerImage, (0,0,0,0))
-#            print("Process completed with return code:", result.returncode)
-#            return layerImage
-#        except subprocess.CalledProcessError as e:
-#            # Process returned non-zero exit status
-#            print("Error executing the command:\n")
-#            print(e)
-#            print("\nCheck that you have 'gerbv' installed and can run it.")
-#            return None
-#        #subprocess.run(
-#        #    [
-#        #        "gerbview",
-#        #        f"--export={type}",
-#        #        "-o",
-#        #        f"{folder_name}/{name}.png",
-#        #        "--dpi=1000",
-#        #        #"--window=5709x1576",
-#        #        f"{path}",
-#        #    ],
-#        #    check=True,
-#        #)
-#
-#    def get_image_size(self, gerber_data):
-#        min_x, max_x, min_y, max_y = float('inf'), float('-inf'), float('inf'), float('-inf')
-#        for shape in gerber_data.shapes:
-#            for point in shape.points:
-#                x, y = point[0], point[1]
-#                min_x = min(min_x, x)
-#                max_x = max(max_x, x)
-#                min_y = min(min_y, y)
-#                max_y = max(max_y, y)
-#
-#        img_width = int(max_x - min_x)
-#        img_height = int(max_y - min_y)
-#        return img_width, img_height
-#    
-#    def color_to_alpha(self, img, col=(0, 0, 0, 254)):
-#        width, height = img.size
-#        pixdata = img.load()
-#        for y in range(height):
-#            for x in range(width):
-#                if pixdata[x, y] == col:
-#                    pixdata[x, y] = (255, 255, 255, 0)
-#
-#    def loadImage(self, file_path, color=None):
-#        if color == None:
-#            color = self.color.getNextColor()
-#        c, rgb = color
-#        print(c)
-#        print(rgb)
-#        if self.option == "Import using pygerber":
-#            print("importing file: "+file_path+" using " + self.option)
-#            return pyg.API2D.render_file(file_path, colors=ColorSet(c[0], c[1], c[2])), rgb
-#        elif self.option == "Import using pcb-tools":
-#                print("importing file: "+file_path+" using " + self.option)
-#                # Load the Gerber file
-#                camfile = gerber.read(file_path)
-#                #c,rgbstr = self.color.getNextColor()
-#                # doesn't work ctx = GerberCairoContext(scale=0.1)
-#                ctx = GerberCairoContext()
-#                ctx.max_width = 800
-#                # can be initialised with a scale...
-#                img_scale = 10  # 'magic' scale that looks ok for kicad gerbers
-#                ctx.scale = (img_scale, img_scale)
-#                camfile.render(ctx)
-#    #            camfile = gerber.load_layer(file_path, max_width=1940)
-#    #            ctx = GerberCairoContext()
-#    #            ctx.render_layer(camfile)
-#
-#                #img_scale = ctx.scale[0]
-#                #img_size = ctx.size_in_pixels
-#                #print("***")
-#                #print(ctx.size_in_pixels)
-#                #print(img_scale)
-#                #print("***")
-#                #while img_size[0] > 4000 and img_size[1] > 4000:
-#                #        print("looping on reducing the scale ")
-#                #        print(img_scale)
-#                #        img_scale = int(img_scale * 0.9)
-#                #        ctx.scale = (img_scale, img_scale)
-#                #        camfile.render(ctx)
-#                #        img_size = ctx.size_in_pixels
-#                #        print(img_size)
-#                #size_int = tuple(int(x*1.5) for x in ctx.size_in_pixels)
-#                #print(size_int)
-#                #ctx.size_in_pixels = size_int
-#                rawbytes = ctx.dump_str()
-#                img = Image.open(BytesIO(rawbytes))
-#                img.convert("RGBA")
-#                self.color_to_alpha(img, (0,0,0,0))
-#                img.putalpha(210)
-#                #img.show()
-#                return img, rgb
-#                #pcb.render(pcb_file, img)
-#        elif  self.option == "Import using gerbv":
-#            img = self.get_image_from_gerbv(file_path, color)
-#            if img is None:
-#                print("\n\nfailed to get an image back from gerbv\n")
-#                exit()
-#            return img, rgb
-#        else:
-#            print(self.option)
-#            exit()
-#            #return pyg.API2D.render_file(file_path, colors=colors)
+
+    def get_difference_outlines(self, a, b, opacity=0.85):
+        """ Function to find differences in images
+            Parameters
+            ----------
+            a: Image
+            The first Image to difference
+            b: Image
+            The second image to difference (must be same dimensions)
+            opacity: float
+            Number from zero to one that represents the opacity of the diff layer. 0 is transparent, 1 is opaque
+
+            Returns
+            -------
+            redmask : Image
+                A semi transparent image with the differences of a & b highlighted with a thick red highlight outline
+            percent_diff_pixels: Float
+                The percentage of pixels that are different between Image a & Image b.
+        """
+        #convert the images to black and white - first
+        a_gray = ImageOps.grayscale(a)
+        b_gray = ImageOps.grayscale(b)
+        #b_gray.show()
+        #input()
+
+        # threshold the images - since they are different colors - (anything above '1' becomes white)
+        a_mask = a_gray.point(lambda x: 255 if x > 1 else 0, '1')
+        b_mask = b_gray.point(lambda x: 255 if x > 1 else 0, '1')
+        #b_mask.show()
+        #input()
+
+        # invert both images 
+        a_inv = ImageOps.invert(a_mask)
+        b_inv = ImageOps.invert(b_mask)
+        #b_inv.show()
+        #input()
+
+        a_bw = a_inv.convert("1")
+        b_bw = b_inv.convert("1")
+        #b_bw.show()
+        #input()
+        diff = ImageChops.difference(a_bw, b_bw)
+        
+        # telluser what the total different pixels are...
+        tot_different_pixels = 0
+        tot_pixels = diff.size[0] * diff.size[1]
+        for pixel in diff.getdata():
+            if pixel != 0:
+                tot_different_pixels += 1
+        percent_diff_pixels = (1- (tot_different_pixels/tot_pixels) ) * 100
+        diff = diff.convert('L')
+
+        new = diff.copy()
+        shrink = new.filter(ImageFilter.MaxFilter(17))
+        grow = shrink.filter(ImageFilter.MinFilter(3))
+        inverted = ImageOps.invert(new)
+        outline = ImageChops.difference(grow, inverted)
+        outline = ImageOps.invert(outline)
+        highlight_color = (247,  126,  185, 220)
+        redmask = self.new_color(diff.size, color=(247,  126,  185, 0))  # same color but transparent - 
+        redmask.paste(highlight_color, (0,0), mask=outline)
+        return redmask, percent_diff_pixels
+
+    # diff code using only pillow
+    # from: https://stackoverflow.com/questions/30277447/compare-two-images-and-highlight-differences-along-on-the-second-image
+    # erode dilate using pillow:
+    # from: https://stackoverflow.com/questions/44195007/equivalents-to-opencvs-erode-and-dilate-in-pil
+    def new_color(self, size, color):
+        ''' Function returns a new image of the defined size and color
+            Parameters
+            ----------
+            size: a tuple of (x,y)
+            color: a tuple of Floats of the form (red, green, blue)
+            
+            Returns
+            -------
+            img: an Image of the specified size and color           
+        '''
+        img = Image.new(mode="RGBA", size=size, color=color)
+        #dr = ImageDraw.Draw(img)
+        #dr.rectangle((0,0) + size, fill=color)
+        return img

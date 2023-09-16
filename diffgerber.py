@@ -4,7 +4,8 @@ from tkinter import ttk
 from tkinter import filedialog
 from tkinter import PhotoImage
 from tkinter import messagebox
-from PIL import Image, ImageTk, ImageChops, ImageDraw, ImageFilter, ImageOps
+from PIL import Image, ImageTk
+#, ImageChops, ImageDraw, ImageFilter, ImageOps
 import difflib as dl
 #import color_generator as cg
 import loader
@@ -32,81 +33,17 @@ point_table = ([0] + ([255] * 255))
 # from: https://stackoverflow.com/questions/30277447/compare-two-images-and-highlight-differences-along-on-the-second-image
 # erode dilate using pillow:
 # from: https://stackoverflow.com/questions/44195007/equivalents-to-opencvs-erode-and-dilate-in-pil
-def new_gray(size, color):
-    img = Image.new('L',size)
-    dr = ImageDraw.Draw(img)
-    dr.rectangle((0,0) + size, fill=color)
-    return img
-
-def new_color(size, color):
-    img = Image.new(mode="RGBA", size=size, color=color)
-    #dr = ImageDraw.Draw(img)
-    #dr.rectangle((0,0) + size, fill=color)
-    return img
-
-def get_difference_outlines(a, b, opacity=0.85):
-    """ Function to find differences in images
-        Parameters
-        ----------
-        a: Image
-        The first Image to difference
-        b: Image
-        The second image to difference
-        opacity: float
-        Number from zero to one that represents the opacity of the diff layer. 0 is transparent, 1 is opaque
-
-        Returns
-        -------
-        redmask : Image
-            A semi transparent image with the differences of a & b highlighted with a thick red highlight outline
-    """
-    global percent_diff_pixels
-    tellUser("checking for differences... hang on!", label_msg=True, record_msg=False)
-    #convert the images to black and white - first
-    a_gray = ImageOps.grayscale(a)
-    b_gray = ImageOps.grayscale(b)
-    #b_gray.show()
-    #input()
-
-    # threshold the images - since they are different colors - (anything above '1' becomes white)
-    a_mask = a_gray.point(lambda x: 255 if x > 1 else 0, '1')
-    b_mask = b_gray.point(lambda x: 255 if x > 1 else 0, '1')
-    #b_mask.show()
-    #input()
-
-    # invert both images 
-    a_inv = ImageOps.invert(a_mask)
-    b_inv = ImageOps.invert(b_mask)
-    #b_inv.show()
-    #input()
-
-    a_bw = a_inv.convert("1")
-    b_bw = b_inv.convert("1")
-    #b_bw.show()
-    #input()
-    diff = ImageChops.difference(a_bw, b_bw)
-    
-    # telluser what the total different pixels are...
-    tot_different_pixels = 0
-    tot_pixels = diff.size[0] * diff.size[1]
-    for pixel in diff.getdata():
-        if pixel != 0:
-            tot_different_pixels += 1
-    percent_diff_pixels = (1- (tot_different_pixels/tot_pixels) ) * 100
-    tellUser("pixel difference : %.2f%% pixels are similar at %d dpi"%(percent_diff_pixels, file_loader.dpi), label_msg=False, record_msg=True)
-    diff = diff.convert('L')
-
-    new = diff.copy()
-    shrink = new.filter(ImageFilter.MaxFilter(17))
-    grow = shrink.filter(ImageFilter.MinFilter(3))
-    inverted = ImageOps.invert(new)
-    outline = ImageChops.difference(grow, inverted)
-    outline = ImageOps.invert(outline)
-    highlight_color = (247,  126,  185, 220)
-    redmask = new_color(diff.size, color=(247,  126,  185, 0))  # same color but transparent - 
-    redmask.paste(highlight_color, (0,0), mask=outline)
-    tellUser("displaying differences", label_msg=True, record_msg=False)
-    return redmask
+#def new_gray(size, color):
+#    img = Image.new('L',size)
+#    dr = ImageDraw.Draw(img)
+#    dr.rectangle((0,0) + size, fill=color)
+#    return img
+#
+#def new_color(size, color):
+#    img = Image.new(mode="RGBA", size=size, color=color)
+#    #dr = ImageDraw.Draw(img)
+#    #dr.rectangle((0,0) + size, fill=color)
+#    return img
 
 def update_file_pairs():
     global left_file_list, right_file_list, left_to_right_dict
@@ -313,7 +250,8 @@ def directory_selected(frame, directory_entry, selected_directory):
 #    """Handle the event when the toolbar button is clicked."""
 #    print("Toolbar button clicked!")
 def button1_clear_clicked(clear_dirs=True):
-    global imageDict, left_directory , right_directory, left_file_list , right_file_list, left_to_right_dict, canvas
+    global imageDict, left_directory , right_directory
+    global left_file_list , right_file_list, left_to_right_dict, canvas, photo_list
     #print("Button 1 clicked")
     # Clear the checkboxes
     for frame in frame_checkboxes:
@@ -369,15 +307,18 @@ def button5_zoomout_clicked():
 
 def button6_diff_clicked():
     global imageDict, active_layer_image_left, active_layer_image_right, active_offset_x, active_offset_y
+    global percent_diff_pixels
     if active_left_index is None:
         tellUser("Active layer unpaired - nothing to highlight")
         return
-    diff_image = get_difference_outlines(active_layer_image_left, active_layer_image_right, opacity=0.55)
+    tellUser("checking for differences... hang on!", label_msg=True, record_msg=False)
+    diff_image, percent_diff_pixels = file_loader.get_difference_outlines(active_layer_image_left, active_layer_image_right, opacity=0.55)
+    tellUser("pixel difference : %.2f%% pixels are similar at %d dpi"%(percent_diff_pixels, file_loader.dpi), label_msg=False, record_msg=True)
     photo = ImageTk.PhotoImage(diff_image)
     rgb = '#%02x%02x%02x%02x' % (247,  126,  185, 220) 
-
     print(active_offset_x)
     imageDict["diff_"+str(active_left_index)] = (diff_image, rgb, active_offset_x, active_offset_y)
+    tellUser("displaying differences", label_msg=True, record_msg=False)
     show_image("diff_"+str(active_left_index))
 
 def import_option_selected(event):
