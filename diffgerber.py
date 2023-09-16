@@ -46,12 +46,20 @@ def new_color(size, color):
 
 def get_difference_outlines(a, b, opacity=0.85):
     """ Function to find differences in images
+        Parameters
+        ----------
+        a: Image
+        The first Image to difference
+        b: Image
+        The second image to difference
+        opacity: float
+        Number from zero to one that represents the opacity of the diff layer. 0 is transparent, 1 is opaque
 
         Returns
         -------
         redmask : Image
             A semi transparent image with the differences of a & b highlighted with a thick red highlight outline
-        """
+    """
     global percent_diff_pixels
     tellUser("checking for differences... hang on!", label_msg=True, record_msg=False)
     #convert the images to black and white - first
@@ -87,8 +95,6 @@ def get_difference_outlines(a, b, opacity=0.85):
     percent_diff_pixels = (1- (tot_different_pixels/tot_pixels) ) * 100
     tellUser("pixel difference : %.2f%% pixels are similar at %d dpi"%(percent_diff_pixels, file_loader.dpi), label_msg=False, record_msg=True)
     diff = diff.convert('L')
-    #diff.show()
-    #input()
 
     new = diff.copy()
     shrink = new.filter(ImageFilter.MaxFilter(17))
@@ -96,46 +102,11 @@ def get_difference_outlines(a, b, opacity=0.85):
     inverted = ImageOps.invert(new)
     outline = ImageChops.difference(grow, inverted)
     outline = ImageOps.invert(outline)
-    #outline.show()
     highlight_color = (247,  126,  185, 220)
     redmask = new_color(diff.size, color=(247,  126,  185, 0))  # same color but transparent - 
-    #redmask.show()
     redmask.paste(highlight_color, (0,0), mask=outline)
-    #redmask.show()
-    #input()
     tellUser("displaying differences", label_msg=True, record_msg=False)
     return redmask
-#    # Hack: there is no threshold in PILL,
-#    # so we add the difference with itself to do
-#    # a poor man's thresholding of the mask: 
-#    #(the values for equal pixels-  0 - don't add up)
-#    thresholded_diff = diff
-#    for repeat in range(3):
-#        thresholded_diff  = ImageChops.add(thresholded_diff, thresholded_diff)
-#    h,w = size = diff.size
-#    mask = new_gray(size, int(255 * (opacity)))
-#    shade = new_gray(size, 0)
-#    new = a.copy()
-#    new.paste(shade, mask=mask)
-#    # To have the original image show partially
-#    # on the final result, simply put "diff" instead of thresholded_diff bellow
-#    # was : new.paste(b, mask=thresholded_diff)
-#    new.paste(b, mask=thresholded_diff)
-#    shrink = new.filter(ImageFilter.MaxFilter(3))
-#    grow = shrink.filter(ImageFilter.MinFilter(17))
-#    
-#    #outline  = grow.copy()
-#    outline = ImageChops.difference(new, grow)
-#    #outline2 = outline.filter(ImageFilter.MinFilter(5))
-#    #outline.paste(shade, mask=mask)
-#    redmask = new_color(size, color=(130,  166,  175, 100))#"#C0A60")#(230,  66,  75))
-#    #redmask.show()
-#    redmask.paste(shade, mask=grow)
-#    #redmask.show()
-#    tellUser("displaying differences", label_msg=True, record_msg=False)
-#    #redmask.show()
-#    return redmask
-
 
 def update_file_pairs():
     global left_file_list, right_file_list, left_to_right_dict
@@ -211,6 +182,13 @@ def show_image(full_filename):
     #img_width, img_height = image.size
     x = 0.0
     y = 0.0
+    dirname = os.path.dirname(full_filename)
+    if dirname == directories[1]: #RHS selected
+        x_offset = float(x_offset_var.get())
+        y_offset = float(y_offset_var.get())
+        x += x_offset
+        y += y_offset
+
     photo = None
     if imageDict:
         image, rgb, offset_x_from_dict, offset_y_from_dict = imageDict.get(full_filename)
@@ -221,20 +199,19 @@ def show_image(full_filename):
         image, rgb, x_off, y_off = file_loader.loadImage(full_filename)
         photo = ImageTk.PhotoImage(image)
         imageDict.update({full_filename: (image, rgb, x_off, y_off)})
-        x = x_off
-        y = y_off
+        x += x_off
+        y += y_off
         print ("got an empty entry in the dictionary: - this shouldn't happen!")
-        pritn(full_filename)
+        print (full_filename)
         exit()
-    else:
-        x = offset_x_from_dict
-        y = offset_y_from_dict
+    x += float(offset_x_from_dict)
+    y += float(offset_y_from_dict)
     #print(full_filename)
     #print(photo)
     canvas.create_image(x, y, anchor="nw", image=photo)
     #canvas.image = photo  # Store a reference to prevent garbage collection
     photo_list.append(photo)
-    
+
 def layer_selected(full_filename, index):
     global active_left_index, imageDict
     #TODO: this is a hacky way of finding the left-to-right lookup - is there a better way?
@@ -349,6 +326,7 @@ def button1_clear_clicked(clear_dirs=True):
     directories = ["", ""]
     right_file_list = []
     left_to_right_dict = {}
+    photo_list = []
     if clear_dirs:
         left_directory_entry.delete(0,tk.END)
         right_directory_entry.delete(0,tk.END)
@@ -383,14 +361,11 @@ def button4_zoomin_clicked():
     tellUser("zoom not implemented")
     canvas.scale("all", 0, 0, 1.1, 1.1)  # Increase scale factor
 
-
-
 def button5_zoomout_clicked():
     global canvas
     print("Button 5 clicked zoom -\n\n *** NOT IMPLEMENTED ***\n\n")
     tellUser("zoom not implemented")
     canvas.scale("all", 0, 0, 0.9, 0.9)  # Decrease scale factor
-
 
 def button6_diff_clicked():
     global imageDict, active_layer_image_left, active_layer_image_right, active_offset_x, active_offset_y
@@ -423,8 +398,114 @@ def tellUser(text_to_output, label_msg=True, record_msg=True):
     if label_msg:
         layer_similarity_label['text'] = text_to_output
         window.update_idletasks()
-        
- 
+
+def move_set_of_gerbers(event=None):
+    global x_offset, y_offset, canvas, window
+    x_offset = 0.0
+    y_offset = 0.0
+    if mode_button_var.get():
+        x_offset = float(x_offset_var.get())
+        y_offset = float(y_offset_var.get())
+
+    #x_current, y_current, _, _ = canvas.coords(canvas_elements)
+    x_current, y_current = 0,0
+
+    if event:
+        if event.keysym == 'Left':
+            x_offset -= 10
+        elif event.keysym == 'Right':
+            x_offset += 10
+        elif event.keysym == 'Up':
+            y_offset -= 10
+        elif event.keysym == 'Down':
+            y_offset += 10
+    
+    x_move = x_offset - x_current
+    y_move = y_offset - y_current
+
+    x_offset_var.set("{:.2f}".format(x_offset))
+    y_offset_var.set("{:.2f}".format(y_offset))
+    
+    canvas.delete("all")
+    photo_list = []
+    for image in left_file_list:
+        show_image(os.path.join(directories[0],image))
+    for image in right_file_list:
+        show_image(os.path.join(directories[1], image))
+    canvas.update_idletasks()
+    #window.update()
+
+def toggle_move_mode():
+    global x_offset_entry, y_offset_entry, mode_button_var, move_msg_label, x_offset_label, y_offset_label, update_button
+    if mode_button_var.get():
+        x_offset_entry.config(state=tk.NORMAL)
+        y_offset_entry.config(state=tk.NORMAL)
+        update_button["state"] = tk.NORMAL
+        move_msg_label.configure(state=tk.NORMAL)
+        x_offset_label.configure(state=tk.NORMAL)
+        y_offset_label.configure(state=tk.NORMAL)
+        #canvas.itemconfig(canvas_elements, state=tk.NORMAL)
+    else:
+        x_offset_entry.config(state=tk.DISABLED)
+        y_offset_entry.config(state=tk.DISABLED)
+        update_button["state"] = tk.DISABLED
+        move_msg_label.configure(state=tk.DISABLED)
+        x_offset_label.configure(state=tk.DISABLED)
+        y_offset_label.configure(state=tk.DISABLED)
+        #canvas.itemconfig(canvas_elements, state=tk.HIDDEN)
+
+move_msg_label = None
+y_offset_label = None
+x_offset_label = None
+update_button = None
+def add_move_layers_gui(target_frame):
+    '''
+    function to add a set of gui elements for controlling position of one side
+    Parameters:
+    -----------
+    target_frame Frame
+
+    '''
+    global x_offset_entry, y_offset_entry, mode_button_var, move_msg_label, x_offset_label, y_offset_label, update_button   
+
+    # Create an "Update" button to move the rectangle to the specified coordinates
+    update_button = tk.Button(target_frame, text="Update", command=move_set_of_gerbers)
+    update_button.configure(state='disable')
+    update_button.pack(side=tk.BOTTOM)
+
+    x_offset_var.set("0.00")
+    y_offset_var.set("0.00")
+
+    y_offset_entry = tk.Entry(target_frame, textvariable=y_offset_var, state=tk.DISABLED)
+    y_offset_entry.pack(side=tk.BOTTOM)
+
+    y_offset_label = tk.Label(target_frame, text="Y Offset:")
+    y_offset_label.configure(state='disable')
+    y_offset_label.pack(side=tk.BOTTOM)
+
+    x_offset_entry = tk.Entry(target_frame, textvariable=x_offset_var, state=tk.DISABLED)
+    x_offset_entry.pack(side=tk.BOTTOM)
+
+    x_offset_label = tk.Label(target_frame, text="X Offset:")
+    x_offset_label.configure(state='disable')
+    x_offset_label.pack(side=tk.BOTTOM)
+    
+    move_msg_label = tk.Label(target_frame, text="Use arrow keys to move: ←↑→↓")
+    move_msg_label.configure(state='disable')
+    move_msg_label.pack(side=tk.BOTTOM)
+
+    # Create a mode button
+    mode_button = tk.Checkbutton(target_frame, text="Set Position:", variable=mode_button_var, command=toggle_move_mode)
+    mode_button.pack(side=tk.BOTTOM)
+
+    # Bind arrow keys to move the rectangle and update offsets
+    window.bind('<Left>', move_set_of_gerbers)
+    window.bind('<Right>', move_set_of_gerbers)
+    window.bind('<Up>', move_set_of_gerbers)
+    window.bind('<Down>', move_set_of_gerbers)
+
+
+
 #from: https://stackoverflow.com/questions/17355902/tkinter-binding-mousewheel-to-scrollbar 
 # doesn't work... 
 #def OnMouseWheel(self,event):
@@ -434,6 +515,11 @@ def tellUser(text_to_output, label_msg=True, record_msg=True):
 # Create the main window
 window = tk.Tk()
 window.title("Gerber Difference Viewer")
+
+#globals for the move layers
+x_offset_var = tk.StringVar()
+y_offset_var = tk.StringVar()
+mode_button_var = tk.BooleanVar()
 
 # Load the icon image
 icon = PhotoImage(file="icon.png")
@@ -509,7 +595,7 @@ text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 text_frame.pack(side=tk.BOTTOM, fill=tk.BOTH)
 text_area.insert(tk.END, "Ready to compare gerber files")
 text_area.see("end")
-text_area["state"] = tk.DISABLED
+text_area["state"] = tk.DISABLED    
 
 # Create the three vertical columns
 left_frame = tk.Frame(main_frame, width=75)
@@ -535,6 +621,9 @@ right_directory_entry.pack(anchor=tk.NW)
 right_directory_button = tk.Button(right_frame, text="Browse", command=lambda: directory_select_btn(right_frame, right_directory_entry))
 right_directory_button.pack(anchor=tk.NW)
 
+
+add_move_layers_gui(right_frame)
+
 # Middle column: Canvas to display the images with scrollbars
 # Create a canvas with scrollbars
 #canvas = tk.Canvas(middle_frame, width=400, height=400)
@@ -551,12 +640,10 @@ canvas.pack(fill=tk.BOTH, expand=True)
 
 # Create vertical and horizontal scrollbars for the image frame
 vscrollbar = tk.Scrollbar(canvas, orient=tk.VERTICAL, command=canvas.yview)
-
 hscrollbar = tk.Scrollbar(canvas, orient=tk.HORIZONTAL, command=canvas.xview)
 
 vscrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 hscrollbar.pack(side=tk.BOTTOM, fill=tk.X)
-
 
 # Configure the canvas to use the scrollbars
 canvas.configure(yscrollcommand=vscrollbar.set)
@@ -579,4 +666,5 @@ frame_images = {left_frame: [], right_frame: []}
 #checkbutton_image = tk.PhotoImage(file="checkbutton_image.png").subsample(3)  # Adjust the subsample factor to resize the image
 
 # Run the GUI
-window.mainloop()
+if __name__ == "__main__":
+    window.mainloop()
