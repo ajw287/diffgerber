@@ -400,7 +400,7 @@ def tellUser(text_to_output, label_msg=True, record_msg=True):
         window.update_idletasks()
 
 def move_set_of_gerbers(event=None):
-    global x_offset, y_offset, canvas, window
+    global x_offset, y_offset, canvas, window, photo_list
     x_offset = 0.0
     y_offset = 0.0
     if mode_button_var.get():
