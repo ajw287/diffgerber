@@ -4,7 +4,7 @@ import os
 import difflib as dl
 import argparse
 
-file_loader = loader.gerbLoader()
+file_loader = loader.gerbLoader(transparency = 220)
 
 def load_images(directory):
     global imageDict

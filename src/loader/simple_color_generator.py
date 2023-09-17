@@ -11,10 +11,10 @@ class simple_color_generator():
     BRIGHT_RED = None
     WHITE = None
     
-    def __init__(self):
+    def __init__(self, transparency=160):
         for i in range(173,285): # range numbers need to be away from 1, but are not important
             self.LIST_OF_COLORS.append((
-                             (( (i+23)*self.LARGE_PRIME[0])%150, ((i+253)*self.LARGE_PRIME[1])%255, ((i+3)*self.LARGE_PRIME[2])%255 , 160),
+                             (( (i+23)*self.LARGE_PRIME[0])%150, ((i+253)*self.LARGE_PRIME[1])%255, ((i+3)*self.LARGE_PRIME[2])%255 , transparency),
                              (100,100,100, 50),
                              ( 50, 50, 50, 50),
             ))

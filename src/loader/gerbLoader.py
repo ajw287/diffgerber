@@ -20,9 +20,9 @@ class gerbLoader():
     'the only way to import gerbers' ;-)
     """
 
-    def __init__(self):
+    def __init__(self, transparency=160):
         self.option = "Import using pygerber"
-        self.color = simple_color_generator.simple_color_generator()
+        self.color = simple_color_generator.simple_color_generator(transparency=transparency)
         #print ("initialised gerbLoader")
         self.imageDict = {}
         self.dpi = 400
