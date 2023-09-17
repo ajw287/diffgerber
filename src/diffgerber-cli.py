@@ -34,7 +34,6 @@ def main(directories, out_file, dpi):
 
     filenames1 = os.listdir(directories[0])#os.listdir(os.fsencode(directories[0]))
     filenames2 = os.listdir(directories[1])#os.listdir(os.fsencode(directories[1]))
-
     merge_image_list = []
     highlight_image_list = []
 
@@ -82,7 +81,7 @@ def main(directories, out_file, dpi):
     merge_image_list[0].save(out_file,"PNG")
     merge_image_list[0].show()
 
-def help_message(exit=True):
+def help_message(and_exit=True):
     """
     A simple help message for users of the command line
     """
@@ -90,19 +89,20 @@ def help_message(exit=True):
     argument_descriptions =  ["Script Name", "old gerber directory", "new gerber directory", "output filename", "dpi of output"]
     for i, arg in enumerate(argument_descriptions):
         print(f"Argument {i:>6}:  {arg}")
-    print("example usage: (creates a low-res thumbnail image)")
-    print(">python diffgerber-cli.py ../examples/pcb-1-a ../examples/pcb-1-b/ out.png 100")
-    if exit:
+    print("\nexample usage: (creates a low-res thumbnail image)")
+    print("\n> python diffgerber-cli.py ../examples/pcb-1-a ../examples/pcb-1-b/ out.png 100\n")
+    if and_exit:
         exit()
 
 if __name__ == "__main__":
     # just check that we got enough command line args
     if len(sys.argv) <= 1:
-        help_message(exit=True) # program terminates in help
-    if sys.argv[1] == "--help" or sys.argv[1] == "-h":
-        help_message(exit=True)
+        help_message(and_exit=True) # program terminates in help
+    #if sys.argv[1] == "--help" or sys.argv[1] == "-h":
+    if any(arg == "--help" for arg in sys.argv) or any(arg == "-h" for arg in sys.argv):
+        help_message(and_exit=True)
     if len(sys.argv) == 5:
         main(directories=[sys.argv[1], sys.argv[2]], out_file=sys.argv[3], dpi=sys.argv[4])
     else:
         print("\nWrong number of command line arguments\n")
-        help_message(exit=True)
+        help_message(and_exit=True)
