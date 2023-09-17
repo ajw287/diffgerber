@@ -10,7 +10,9 @@ python = ">=3.10,<3.13"
 pygerber = ">=2.0.1"
 pillow = "^10.0.0"
 
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tools.setuptools.packages.find]
+where = ["src"]

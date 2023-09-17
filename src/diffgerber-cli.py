@@ -88,6 +88,7 @@ def main(directories, out_file, dpi):
     else:
         print("no differences to show")
         exit()
+    merge_image_list[0].save(out_file,"PNG")
     merge_image_list[0].show()
 
 def help_message():
