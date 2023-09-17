@@ -84,8 +84,8 @@ def diff_gerbers(directories, out_file, dpi, quiet=False):
 def main():
     parser = argparse.ArgumentParser(
                     prog='diffgerber-cli',
-                    description='Command line gerber directory diff tool',
-                    epilog='\nexample usage: (creates a low-res thumbnail image)\n \n> python diffgerber-cli.py ../examples/pcb-1-a ../examples/pcb-1-b/ out.png 100\n')
+                    description='Command line gerber directory diff tool, recognises layers by filename and diffs if they can be paired',
+                    epilog='\nexample usage: (creates a low-res thumbnail image)\n \n> python diffgerber-cli.py ../examples/pcb-1-a ../examples/pcb-1-b/ 100 out.png --quiet\n')
     parser.add_argument("input_directory1", help="Path to input directory 1")
     parser.add_argument("input_directory2", help="Path to input directory 2")
     parser.add_argument("dpi", type=int, default=300, help="DPI (dots per inch) value")
@@ -101,7 +101,6 @@ def main():
         args.dpi,
         args.quiet,
     )
-
 
 if __name__ == "__main__":
     main()
