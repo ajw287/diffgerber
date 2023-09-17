@@ -50,6 +50,7 @@ class gerbLoader():
             )
             #out.render().save("./tmp.png")
             #layerImage = Image.open('./tmp.png')
+            #print(file_path)
             render_result = out.render()
             layerImage =  render_result._result_handle.result
             coords = render_result._properties.target_coordinate_origin

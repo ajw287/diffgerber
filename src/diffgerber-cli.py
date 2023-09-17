@@ -31,7 +31,7 @@ def load_images(directory):
             layer_colors.append(rgb)
     return images, filenames, layer_colors, xs, ys
 
-def diff_gerbers(directories, out_file, dpi, quiet=False):
+def diff_gerbers(directories, out_file, dpi, quiet_mode=False, display_image=False):
     filenames1 = os.listdir(directories[0])#os.listdir(os.fsencode(directories[0]))
     filenames2 = os.listdir(directories[1])#os.listdir(os.fsencode(directories[1]))
     merge_image_list = []
@@ -42,7 +42,8 @@ def diff_gerbers(directories, out_file, dpi, quiet=False):
     files_to_diff = []
     for i, name in enumerate(filenames1):
         print(name)
-        if any(name == fname for fname in filenames2):
+        if any(name == fname for fname in filenames2) and \
+            name.endswith((".gbr", ".grb")) :
             files_to_diff.append(i)
     if not files_to_diff:
         print("Error: no gerber files detected!\n")
@@ -78,8 +79,14 @@ def diff_gerbers(directories, out_file, dpi, quiet=False):
     else:
         print("no differences to show")
         exit()
-    merge_image_list[0].save(out_file,"PNG")
-    merge_image_list[0].show()
+    
+    #crop the image
+    out_image = merge_image_list[0].crop(merge_image_list[0].getbbox())
+
+    #show and save ... maybe just save?
+    out_image.save(out_file,"PNG")
+    if display_image:
+        out_image.show()
 
 def main():
     parser = argparse.ArgumentParser(
@@ -89,8 +96,10 @@ def main():
     parser.add_argument("input_directory1", help="Path to input directory 1")
     parser.add_argument("input_directory2", help="Path to input directory 2")
     parser.add_argument("dpi", type=int, default=300, help="DPI (dots per inch) value")
-    parser.add_argument("output_filename", help="Output filename")
+    parser.add_argument("output_filename", help="Output filename (png file)")
     parser.add_argument("--quiet", "-q", default=False, action="store_true", help="Run in quiet mode")
+    parser.add_argument("--display", "-D", default=False, action="store_true", help="Display the image when the script finishes with default image viewer")
+
 
     args = parser.parse_args()
 
@@ -100,8 +109,8 @@ def main():
         args.output_filename,
         args.dpi,
         args.quiet,
+        args.display,
     )
 
 if __name__ == "__main__":
     main()
-    exit()
