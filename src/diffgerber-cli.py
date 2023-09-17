@@ -31,24 +31,15 @@ def load_images(directory):
     return images, filenames, layer_colors, xs, ys
 
 def main(directories, out_file, dpi):
-    #images1 = []
-    #images2 = []
+
     filenames1 = os.listdir(directories[0])#os.listdir(os.fsencode(directories[0]))
     filenames2 = os.listdir(directories[1])#os.listdir(os.fsencode(directories[1]))
-    #layer_colors1 = []
-    #layer_colors2 = []
-    #xs1 = []
-    #xs2 = []
-    #ys1 = []
-    #ys2 = []
 
     merge_image_list = []
     highlight_image_list = []
 
     file_loader.dpi = dpi
 
-    #images1, filenames1, layer_colors1, x_offs1, y_offs1 = load_images(directories[0])
-    #images2, filenames2, layer_colors2, x_offs2, y_offs2 = load_images(directories[1])
     files_to_diff = []
     for i, name in enumerate(filenames1):
         print(name)
@@ -91,7 +82,7 @@ def main(directories, out_file, dpi):
     merge_image_list[0].save(out_file,"PNG")
     merge_image_list[0].show()
 
-def help_message():
+def help_message(exit=True):
     """
     A simple help message for users of the command line
     """
@@ -99,14 +90,19 @@ def help_message():
     argument_descriptions =  ["Script Name", "old gerber directory", "new gerber directory", "output filename", "dpi of output"]
     for i, arg in enumerate(argument_descriptions):
         print(f"Argument {i:>6}:  {arg}")
-    exit()
+    print("example usage: (creates a low-res thumbnail image)")
+    print(">python diffgerber-cli.py ../examples/pcb-1-a ../examples/pcb-1-b/ out.png 100")
+    if exit:
+        exit()
 
 if __name__ == "__main__":
     # just check that we got enough command line args
+    if len(sys.argv) <= 1:
+        help_message(exit=True) # program terminates in help
     if sys.argv[1] == "--help" or sys.argv[1] == "-h":
-        help_message()
+        help_message(exit=True)
     if len(sys.argv) == 5:
         main(directories=[sys.argv[1], sys.argv[2]], out_file=sys.argv[3], dpi=sys.argv[4])
     else:
         print("\nWrong number of command line arguments\n")
-        help_message()
+        help_message(exit=True)
