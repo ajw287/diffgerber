@@ -2,6 +2,7 @@ import sys
 import loader
 import os
 import difflib as dl
+import argparse
 
 file_loader = loader.gerbLoader()
 
@@ -30,8 +31,7 @@ def load_images(directory):
             layer_colors.append(rgb)
     return images, filenames, layer_colors, xs, ys
 
-def main(directories, out_file, dpi):
-
+def diff_gerbers(directories, out_file, dpi, quiet=False):
     filenames1 = os.listdir(directories[0])#os.listdir(os.fsencode(directories[0]))
     filenames2 = os.listdir(directories[1])#os.listdir(os.fsencode(directories[1]))
     merge_image_list = []
@@ -45,7 +45,7 @@ def main(directories, out_file, dpi):
         if any(name == fname for fname in filenames2):
             files_to_diff.append(i)
     if not files_to_diff:
-        print("Error no gerber files detected!\n")
+        print("Error: no gerber files detected!\n")
         exit()
     for index in files_to_diff:
         sim = 0.0
@@ -81,28 +81,28 @@ def main(directories, out_file, dpi):
     merge_image_list[0].save(out_file,"PNG")
     merge_image_list[0].show()
 
-def help_message(and_exit=True):
-    """
-    A simple help message for users of the command line
-    """
-    print (f"{sys.argv[0]}: Script usage help message")
-    argument_descriptions =  ["Script Name", "old gerber directory", "new gerber directory", "output filename", "dpi of output"]
-    for i, arg in enumerate(argument_descriptions):
-        print(f"Argument {i:>6}:  {arg}")
-    print("\nexample usage: (creates a low-res thumbnail image)")
-    print("\n> python diffgerber-cli.py ../examples/pcb-1-a ../examples/pcb-1-b/ out.png 100\n")
-    if and_exit:
-        exit()
+def main():
+    parser = argparse.ArgumentParser(
+                    prog='diffgerber-cli',
+                    description='Command line gerber directory diff tool',
+                    epilog='\nexample usage: (creates a low-res thumbnail image)\n \n> python diffgerber-cli.py ../examples/pcb-1-a ../examples/pcb-1-b/ out.png 100\n')
+    parser.add_argument("input_directory1", help="Path to input directory 1")
+    parser.add_argument("input_directory2", help="Path to input directory 2")
+    parser.add_argument("dpi", type=int, default=300, help="DPI (dots per inch) value")
+    parser.add_argument("output_filename", help="Output filename")
+    parser.add_argument("--quiet", "-q", default=False, action="store_true", help="Run in quiet mode")
+
+    args = parser.parse_args()
+
+    diff_gerbers(
+        [args.input_directory1,
+        args.input_directory2],
+        args.output_filename,
+        args.dpi,
+        args.quiet,
+    )
+
 
 if __name__ == "__main__":
-    # just check that we got enough command line args
-    if len(sys.argv) <= 1:
-        help_message(and_exit=True) # program terminates in help
-    #if sys.argv[1] == "--help" or sys.argv[1] == "-h":
-    if any(arg == "--help" for arg in sys.argv) or any(arg == "-h" for arg in sys.argv):
-        help_message(and_exit=True)
-    if len(sys.argv) == 5:
-        main(directories=[sys.argv[1], sys.argv[2]], out_file=sys.argv[3], dpi=sys.argv[4])
-    else:
-        print("\nWrong number of command line arguments\n")
-        help_message(and_exit=True)
+    main()
+    exit()
