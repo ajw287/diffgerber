@@ -1,3 +1,3 @@
 Pillow==10.0.1
 pygerber==2.0.0
-setuptools==68.1.2
+setuptools==70.0.0
